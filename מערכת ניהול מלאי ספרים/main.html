@@ -659,9 +659,12 @@
 
         const addBook = async (book) => {
             try {
+                console.log('🚀 addBook started - Current books before add:', loadFromLocalStorage().length);
+                
                 if (!checkOnlineStatus()) {
                     // מצב אופליין - שמירה מקומית
                     const books = loadFromLocalStorage();
+                    console.log('📋 Loaded existing books for add:', books.length, books.map(b => b.name));
                     
                     // Generate unique ID consistently with renderBooks
                     const existingIds = new Set(books.map(b => b.id).filter(id => id));
@@ -672,8 +675,9 @@
                     
                     const newBook = { ...book, id: newId, offline: true };
                     books.push(newBook);
+                    console.log('➕ Adding book to array:', newBook.name, '- Array size before save:', books.length);
                     saveToLocalStorage(books);
-                    console.log('📚 Added new book:', newBook.name, '- Total books:', books.length);
+                    console.log('📚 Added new book:', newBook.name, '- Total books after save:', books.length);
                     return newBook;
                 }
                 
@@ -700,10 +704,13 @@
 
         const getBooks = async () => {
             try {
+                console.log('🔍 getBooks called - checking online status...');
                 if (!checkOnlineStatus()) {
                     // מצב אופליין - טעינה מקומית
                     console.log('📱 Offline mode - loading from localStorage');
-                    return loadFromLocalStorage();
+                    const localBooks = loadFromLocalStorage();
+                    console.log('📚 getBooks returning from localStorage:', localBooks.length, 'books');
+                    return localBooks;
                 }
                 
                 // מצב אונליין - טעינה מ-Firebase
@@ -774,8 +781,11 @@
                 if (!checkOnlineStatus()) {
                     // מצב אופליין - מחיקה מקומית
                     const books = loadFromLocalStorage();
+                    console.log('📋 Books before delete:', books.length, books.map(b => `${b.name}(${b.id})`));
                     const updatedBooks = books.filter(book => String(book.id) !== String(id));
+                    console.log('📋 Books after filter:', updatedBooks.length, updatedBooks.map(b => `${b.name}(${b.id})`));
                     saveToLocalStorage(updatedBooks);
+                    console.log('✅ Delete completed successfully');
                     return;
                 }
                 
@@ -827,7 +837,9 @@
         };
 
         const renderBooks = async (searchTerm = '') => {
+            console.log('🎨 renderBooks started - searchTerm:', searchTerm);
             let books = await getBooks();
+            console.log('📖 renderBooks got books:', books.length, books.map(b => b.name));
             
             // Add IDs to books that don't have them - with better ID generation
             let needsUpdate = false;
@@ -984,23 +996,29 @@
             console.log('📖 מוסיף ספר:', book);
             
             try {
+                console.log('📝 Form submitted - editingBookId:', editingBookId, 'Book data:', book);
+                
                 if (editingBookId) {
                     console.log('📝 Saving edited book with ID:', editingBookId);
                     await updateBook(editingBookId, book);
                     console.log('✏️ ספר עודכן בהצלחה');
                 } else {
+                    console.log('➕ Adding new book...');
                     await addBook(book);
-                    console.log('➕ ספר נוסף בהצלחה');
+                    console.log('✅ ספר נוסף בהצלחה');
                 }
 
+                console.log('🎭 Hiding modal and resetting form...');
                 bookModal.style.display = "none";
                 bookForm.reset();
                 editingBookId = null;
+                
+                console.log('🎨 Calling renderBooks after form submission...');
                 await renderBooks();
                 
                 // בדיקה שהנתונים נשמרו
                 const currentBooks = loadFromLocalStorage();
-                console.log('🔍 סך הכל ספרים אחרי הוספה:', currentBooks.length);
+                console.log('🔍 סך הכל ספרים אחרי הוספה:', currentBooks.length, currentBooks.map(b => b.name));
                 
             } catch (error) {
                 console.error('❌ שגיאה בהוספת ספר:', error);
@@ -1018,6 +1036,8 @@
         });
 
         bookTable.addEventListener("click", async (e) => {
+            console.log('🖱️ Table clicked - target:', e.target.tagName, 'classes:', e.target.classList.toString());
+            
             if (e.target.classList.contains("edit")) {
                 const id = e.target.dataset.id;
                 console.log('🔧 Edit button clicked, ID:', id);
@@ -1035,17 +1055,23 @@
                     modalTitle.textContent = "ערוך ספר";
                     bookModal.style.display = "flex";
                     editingBookId = id;
+                } else {
+                    console.error('❌ Book not found for edit, ID:', id);
                 }
             } else if (e.target.classList.contains("delete")) {
                 const id = e.target.dataset.id;
                 console.log('🗑️ Delete button clicked, ID:', id);
                 if (confirm("האם אתה בטוח שברצונך למחוק את הספר?")) {
+                    console.log('✅ User confirmed delete');
                     await deleteBook(id);
+                    console.log('🎨 Calling renderBooks after delete...');
                     renderBooks();
                     
                     // Auto-export after delete
                     const books = await getBooks();
                     exportToExcel(books);
+                } else {
+                    console.log('❌ User cancelled delete');
                 }
             }
         });
