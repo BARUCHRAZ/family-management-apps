@@ -271,12 +271,36 @@
             border: 1px solid #e9ecef;
         }
 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
         .modal h2 {
             color: #333;
-            margin-bottom: 1rem;
-            text-align: center;
+            margin: 0;
             font-weight: 500;
             font-size: 1.5rem;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .close-button:hover {
+            background-color: #f8f9fa;
+            color: #dc3545;
         }
 
         .modal form {
@@ -564,7 +588,10 @@
 
         <div class="modal" id="book-modal">
             <div class="modal-content">
-                <h2 id="modal-title">הוסף ספר חדש</h2>
+                <div class="modal-header">
+                    <h2 id="modal-title">הוסף ספר חדש</h2>
+                    <button class="close-button" id="close-modal">✖</button>
+                </div>
                 <form id="book-form">
                     <label for="book-name">שם ספר</label>
                     <input type="text" id="book-name" required>
@@ -1087,8 +1114,52 @@
         });
 
         document.getElementById("add-book").addEventListener("click", () => {
+            console.log('➕ Add book button clicked - opening modal');
+            
+            // איפוס הטופס
+            bookForm.reset();
+            
+            // איפוס מצב העריכה
+            editingBookId = null;
+            
+            // הגדרת כותרת
             modalTitle.textContent = "הוסף ספר חדש";
+            
+            // פתיחת המודאל
             bookModal.style.display = "flex";
+            
+            // מיקוד בשדה הראשון
+            document.getElementById("book-name").focus();
+            
+            console.log('✅ Modal opened for new book');
+        });
+
+        // כפתור סגירת מודאל
+        document.getElementById("close-modal").addEventListener("click", () => {
+            console.log('✖ Close modal button clicked');
+            bookModal.style.display = "none";
+            bookForm.reset();
+            editingBookId = null;
+        });
+
+        // סגירת מודאל בלחיצה על הרקע
+        bookModal.addEventListener("click", (e) => {
+            if (e.target === bookModal) {
+                console.log('🖱️ Modal background clicked - closing modal');
+                bookModal.style.display = "none";
+                bookForm.reset();
+                editingBookId = null;
+            }
+        });
+
+        // סגירת מודאל עם ESC
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && bookModal.style.display === "flex") {
+                console.log('⌨️ ESC pressed - closing modal');
+                bookModal.style.display = "none";
+                bookForm.reset();
+                editingBookId = null;
+            }
         });
 
         bookTable.addEventListener("click", async (e) => {
