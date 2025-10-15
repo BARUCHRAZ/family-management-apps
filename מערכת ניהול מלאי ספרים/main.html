@@ -623,6 +623,7 @@
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
                 console.log('📝 נתונים נשמרו:', books.length, 'ספרים');
+                console.log('📖 שמות הספרים:', books.map(b => b.name).join(', '));
             } catch (error) {
                 console.error('שגיאה בשמירה:', error);
                 alert('שגיאה בשמירת הנתונים מקומית');
@@ -640,12 +641,15 @@
                 const data = JSON.parse(stored);
                 if (data.version === 2 && data.books) {
                     console.log('✅ נתונים נטענו:', data.books.length, 'ספרים');
+                    console.log('📖 שמות הספרים שנטענו:', data.books.map(b => b.name).join(', '));
                     return data.books;
                 }
                 
                 // נתונים ישנים - המר אותם
                 console.log('🔄 המרת נתונים ישנים');
-                return Array.isArray(data) ? data : [];
+                const converted = Array.isArray(data) ? data : [];
+                console.log('📖 נתונים ישנים שהומרו:', converted.map(b => b.name || 'ללא שם').join(', '));
+                return converted;
                 
             } catch (error) {
                 console.error('שגיאה בטעינה:', error);
@@ -658,9 +662,18 @@
                 if (!checkOnlineStatus()) {
                     // מצב אופליין - שמירה מקומית
                     const books = loadFromLocalStorage();
-                    const newBook = { ...book, id: Date.now(), offline: true };
+                    
+                    // Generate unique ID consistently with renderBooks
+                    const existingIds = new Set(books.map(b => b.id).filter(id => id));
+                    let newId;
+                    do {
+                        newId = 'book_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                    } while (existingIds.has(newId));
+                    
+                    const newBook = { ...book, id: newId, offline: true };
                     books.push(newBook);
                     saveToLocalStorage(books);
+                    console.log('📚 Added new book:', newBook.name, '- Total books:', books.length);
                     return newBook;
                 }
                 
@@ -816,18 +829,29 @@
         const renderBooks = async (searchTerm = '') => {
             let books = await getBooks();
             
-            // Add IDs to books that don't have them
+            // Add IDs to books that don't have them - with better ID generation
             let needsUpdate = false;
+            const existingIds = new Set(books.filter(b => b.id).map(b => b.id));
+            
             books = books.map(book => {
                 if (!book.id) {
-                    book.id = Date.now() + Math.random(); // Add unique ID only if missing
+                    // Generate unique ID that doesn't conflict with existing ones
+                    let newId;
+                    do {
+                        newId = 'book_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                    } while (existingIds.has(newId));
+                    
+                    book.id = newId;
+                    existingIds.add(newId);
                     needsUpdate = true;
+                    console.log('🆔 Added ID to book:', book.name, '- ID:', newId);
                 }
                 return book;
             });
             
             // Save only if we added new IDs
             if (needsUpdate) {
+                console.log('💾 Updating localStorage with new IDs');
                 saveToLocalStorage(books);
             }
 
