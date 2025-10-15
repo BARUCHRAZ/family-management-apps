@@ -611,15 +611,46 @@
         // הגדרת אוסף הספרים
         const booksCollection = collection(db, 'books');
 
-        // פונקציות Firebase במקום localStorage
+        // פונקציות localStorage מתקנות - עם חתימת זמן
+        const STORAGE_KEY = 'booksInventory_v2';
+        
         const saveToLocalStorage = (books) => {
-            // גיבוי מקומי למצב אופליין
-            localStorage.setItem("books", JSON.stringify(books));
+            try {
+                const data = {
+                    books: books,
+                    timestamp: Date.now(),
+                    version: 2
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                console.log('📝 נתונים נשמרו:', books.length, 'ספרים');
+            } catch (error) {
+                console.error('שגיאה בשמירה:', error);
+                alert('שגיאה בשמירת הנתונים מקומית');
+            }
         };
 
         const loadFromLocalStorage = () => {
-            const books = localStorage.getItem("books");
-            return books ? JSON.parse(books) : [];
+            try {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (!stored) {
+                    console.log('🔍 אין נתונים שמורים - התחלה מחדש');
+                    return [];
+                }
+                
+                const data = JSON.parse(stored);
+                if (data.version === 2 && data.books) {
+                    console.log('✅ נתונים נטענו:', data.books.length, 'ספרים');
+                    return data.books;
+                }
+                
+                // נתונים ישנים - המר אותם
+                console.log('🔄 המרת נתונים ישנים');
+                return Array.isArray(data) ? data : [];
+                
+            } catch (error) {
+                console.error('שגיאה בטעינה:', error);
+                return [];
+            }
         };
 
         const addBook = async (book) => {
@@ -912,16 +943,32 @@
                 purchasePrice: parseFloat(document.getElementById("purchase-price").value) || 0,
                 salePrice: parseFloat(document.getElementById("sale-price").value) || 0,
                 onlinePrice: parseFloat(document.getElementById("online-price").value) || 0
-            };            if (editingBookId) {
-                await updateBook(editingBookId, book);
-            } else {
-                await addBook(book);
-            }
+            };
+            
+            console.log('📖 מוסיף ספר:', book);
+            
+            try {
+                if (editingBookId) {
+                    await updateBook(editingBookId, book);
+                    console.log('✏️ ספר עודכן בהצלחה');
+                } else {
+                    await addBook(book);
+                    console.log('➕ ספר נוסף בהצלחה');
+                }
 
-            bookModal.style.display = "none";
-            bookForm.reset();
-            editingBookId = null;
-            renderBooks();
+                bookModal.style.display = "none";
+                bookForm.reset();
+                editingBookId = null;
+                await renderBooks();
+                
+                // בדיקה שהנתונים נשמרו
+                const currentBooks = loadFromLocalStorage();
+                console.log('🔍 סך הכל ספרים אחרי הוספה:', currentBooks.length);
+                
+            } catch (error) {
+                console.error('❌ שגיאה בהוספת ספר:', error);
+                alert('שגיאה בהוספת הספר: ' + error.message);
+            }
             
             // Auto-export after add/edit
             const books = await getBooks();
