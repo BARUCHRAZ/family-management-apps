@@ -441,7 +441,7 @@
             const state = {
                 id: calculationId,
                 processedData, 
-                rawStudentData: Array.from(rawStudentData.entries()), 
+                rawStudentData: Object.fromEntries(rawStudentData), // Convert Map to Object for Firebase
                 calculationParams, 
                 monthlyStipend: monthlyStipendInput.value,
                 timePeriods: getTimePeriodsFromUI().map(p => ({ ...p, startDate: p.startDate.toISOString() })),
@@ -558,11 +558,22 @@
             try {
                 const state = JSON.parse(stateJSON);
                 processedData = state.processedData;
-                rawStudentData = new Map(state.rawStudentData.map(([id, student]) => {
-                    const revivedSessions = new Map(Object.entries(student.dailySessions).map(([dateKey, sessions]) => [dateKey, sessions.map(s => ({ start: new Date(s.start), end: new Date(s.end) }))]));
-                    student.dailySessions = revivedSessions;
-                    return [id, student];
-                }));
+                // Handle both old format (Array) and new format (Object) for backward compatibility
+                if (Array.isArray(state.rawStudentData)) {
+                    // Old format - convert from Array
+                    rawStudentData = new Map(state.rawStudentData.map(([id, student]) => {
+                        const revivedSessions = new Map(Object.entries(student.dailySessions).map(([dateKey, sessions]) => [dateKey, sessions.map(s => ({ start: new Date(s.start), end: new Date(s.end) }))]));
+                        student.dailySessions = revivedSessions;
+                        return [id, student];
+                    }));
+                } else {
+                    // New format - convert from Object
+                    rawStudentData = new Map(Object.entries(state.rawStudentData).map(([id, student]) => {
+                        const revivedSessions = new Map(Object.entries(student.dailySessions).map(([dateKey, sessions]) => [dateKey, sessions.map(s => ({ start: new Date(s.start), end: new Date(s.end) }))]));
+                        student.dailySessions = revivedSessions;
+                        return [id, student];
+                    }));
+                }
                 calculationParams = state.calculationParams;
                 monthlyStipendInput.value = state.monthlyStipend;
                 restoreTimePeriodsUI(state.timePeriods);
