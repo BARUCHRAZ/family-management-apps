@@ -1052,18 +1052,31 @@
                     // הגדרת מאזין לשינויים בזמן אמת
                     const q = query(booksCollection, orderBy('createdAt', 'desc'));
                     onSnapshot(q, (snapshot) => {
-                        const books = [];
+                        const firebaseBooks = [];
                         snapshot.forEach((doc) => {
-                            books.push({ id: doc.id, ...doc.data() });
+                            firebaseBooks.push({ id: doc.id, ...doc.data() });
                         });
-                        saveToLocalStorage(books);
-                        renderBooks();
+                        
+                        console.log('🔄 Firebase data received:', firebaseBooks.length, 'ספרים');
+                        
+                        // רק עדכן אם יש נתונים מ-Firebase או אם אין נתונים מקומיים
+                        const localBooks = loadFromLocalStorage();
+                        if (firebaseBooks.length > 0 || localBooks.length === 0) {
+                            console.log('📊 Updating from Firebase:', firebaseBooks.length, 'ספרים');
+                            saveToLocalStorage(firebaseBooks);
+                            renderBooks();
+                        } else {
+                            console.log('⚠️ Firebase empty, keeping localStorage data:', localBooks.length, 'ספרים');
+                            renderBooks(); // רינדר הנתונים המקומיים
+                        }
                     }, (error) => {
                         console.error('שגיאה במאזין Firebase:', error);
+                        console.log('🔄 Using localStorage due to Firebase error');
                         renderBooks(); // טעינה מנתונים מקומיים
                     });
                 } else {
                     // מצב אופליין - טעינה מקומית
+                    console.log('📱 Offline mode - using localStorage');
                     renderBooks();
                 }
                 
