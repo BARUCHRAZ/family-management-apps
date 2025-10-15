@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול מלאי ספרים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            direction: rtl;
+            color: #333;
+        }
+
+        header {
+            background: #2c3e50;
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            color: white;
+            font-size: 2rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* כלי הפקד עליונים */
+        .controls {
+            background: white;
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid #e9ecef;
+        }
+
+        #search {
+            flex: 1;
+            min-width: 300px;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        #search:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .add-book {
+            background: #28a745;
+            color: white;
+        }
+
+        .add-book:hover {
+            background: #1e7e34;
+        }
+
+        #export-button {
+            background: #007bff;
+            color: white;
+        }
+
+        #export-button:hover {
+            background: #0056b3;
+        }
+
+        #import-button {
+            background: #ffc107;
+            color: #212529;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #import-button:hover {
+            background: #e0a800;
+        }
+
+        #export-button:hover {
+            background: #0056b3;
+        }
+
+        /* טבלה מודרנית */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e9ecef;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        table th, table td {
+            padding: 0.8rem 0.8rem;
+            text-align: center;
+            word-wrap: break-word;
+            overflow: hidden;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: middle;
+            /* קווים מפרידים אנכיים בין העמודות */
+            border-right: 1px solid #e9ecef;
+        }
+
+        /* אין קו מימין לעמודה האחרונה כדי למנוע כפילות בקצה */
+        table th:last-child, table td:last-child {
+            border-right: none;
+        }
+
+        table th {
+            background: #495057;
+            color: white;
+            font-weight: 500;
+            font-size: 0.9rem;
+            position: relative;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        table tbody tr:hover {
+            background: #e9ecef;
+        }
+
+        /* שורת הסיכום */
+        .summary-row {
+            background: #e8f5e8 !important;
+            font-weight: 600;
+            color: #155724;
+            border-bottom: 2px solid #28a745 !important;
+        }
+
+        .summary-row td {
+            font-size: 1rem;
+        }
+
+        /* קביעת רוחב ספציפי לכל עמודה */
+        table th:nth-child(1), table td:nth-child(1) { width: 22%; } /* שם ספר */
+        table th:nth-child(2), table td:nth-child(2) { width: 13%; } /* הוצאה */
+        table th:nth-child(3), table td:nth-child(3) { width: 18%; } /* תיאור */
+        table th:nth-child(4), table td:nth-child(4) { width: 7%; }  /* כמות */
+        table th:nth-child(5), table td:nth-child(5) { width: 10%; } /* מחיר קניה */
+        table th:nth-child(6), table td:nth-child(6) { width: 10%; } /* מחיר מכירה */
+        table th:nth-child(7), table td:nth-child(7) { width: 10%; } /* מחיר אונליין */
+        table th:nth-child(8), table td:nth-child(8) { width: 10%; } /* פעולות */
+
+        /* כפתורי פעולה */
+        .actions {
+            text-align: center;
+        }
+
+        .actions button {
+            display: inline-block;
+            padding: 0.15rem 0.3rem;
+            margin: 0.1rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            min-width: 30px;
+        }
+
+        .edit {
+            background-color: #e6f3ff;
+            color: #0056b3;
+        }
+
+        .edit:hover {
+            background-color: #cce5ff;
+        }
+
+        .delete {
+            background-color: #fbeded;
+            color: #bd2130;
+        }
+
+        .delete:hover {
+            background-color: #f8d7da;
+        }
+
+        .edit {
+            background: #007bff;
+            color: white;
+        }
+
+        .edit:hover {
+            background: #0056b3;
+        }
+
+        .delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .delete:hover {
+            background: #c82333;
+        }
+
+        /* מלאי אפס */
+        .out-of-stock {
+            background: #f8d7da !important;
+            color: #721c24 !important;
+            font-weight: bold;
+        }
+
+        /* מודל מודרני */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 1.5rem;
+            border-radius: 8px;
+            width: 95%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #e9ecef;
+        }
+
+        .modal h2 {
+            color: #333;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.5rem;
+        }
+
+        .modal form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.3rem;
+            font-size: 0.9rem;
+        }
+
+        .modal input {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .modal input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+        }
+
+        .modal button {
+            background: #007bff;
+            color: white;
+            padding: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .modal button:hover {
+            background: #0056b3;
+        }
+
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+            line-height: 1;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #28a745;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            margin: 20px auto;
+        }
+
+        /* רספונסיבי */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1.5rem;
+            }
+            
+            #search {
+                min-width: unset;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .modal-content {
+                margin: 5% auto;
+                width: 98%;
+                padding: 1rem;
+                max-height: 85vh;
+            }
+            
+            .modal h2 {
+                font-size: 1.3rem;
+                margin-bottom: 0.8rem;
+            }
+            
+            .modal form {
+                gap: 0.8rem;
+            }
+            
+            .modal input {
+                padding: 0.7rem;
+                font-size: 0.9rem;
+            }
+            
+            .modal button {
+                padding: 0.9rem;
+                font-size: 0.9rem;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            table th, table td {
+                padding: 0.8rem 0.5rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding: 1rem;
+            }
+            
+            .controls {
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                margin: 3% auto;
+                width: 98%;
+                padding: 0.8rem;
+                max-height: 90vh;
+            }
+            
+            .modal h2 {
+                font-size: 1.2rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .modal form {
+                gap: 0.6rem;
+            }
+            
+            .modal label {
+                font-size: 0.75rem;
+                margin-bottom: 0.2rem;
+            }
+            
+            .modal input {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+                border-radius: 8px;
+            }
+            
+            .modal button {
+                padding: 0.8rem;
+                font-size: 0.85rem;
+                margin-top: 0.3rem;
+            }
+            
+            header h1 {
+                font-size: 1.5rem;
+            }
+            
+            table th, table td {
+                padding: 0.6rem 0.3rem;
+                font-size: 0.8rem;
+            }
+            
+            .actions button {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.7rem;
+            }
+        }
+
+        /* אפקטים נוספים */
+        /* עיצוב מתקדם לכפתור הייבוא */
+        #import-label {
+            display: inline-block;
+        }
+
+        /* אנימציות כניסה */
+        .table-container {
+            animation: slideInUp 0.6s ease;
+        }
+
+        .controls {
+            animation: slideInDown 0.6s ease;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* הדגשת שורות זוגיות */
+        table tbody tr:nth-child(even) {
+            background: rgba(248, 249, 250, 0.5);
+        }
+
+        table tbody tr:nth-child(odd) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>מערכת ניהול מלאי ספרים</h1>
+    </header>
+    <main>
+        <div class="controls">
+            <input type="text" id="search" placeholder="🔍 חפש לפי שם, הוצאה או תיאור...">
+            <button class="add-book btn" id="add-book">➕ הוסף ספר חדש</button>
+            <button class="btn" id="export-button">📊 ייצא לאקסל</button>
+            <label for="import-button" class="btn" id="import-label">📁 ייבא מאקסל</label>
+            <input type="file" id="import-button" accept=".csv" style="display: none;">
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr id="summary-row" class="summary-row">
+                        <td id="summary-books">0 ספרים</td>
+                        <td id="summary-publishers">0 הוצאות</td>
+                        <td>-</td>
+                        <td id="summary-quantity">0</td>
+                        <td id="summary-purchase">₪0</td>
+                        <td id="summary-sale">₪0</td>
+                        <td id="summary-online">₪0</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <th>📚 שם ספר</th>
+                        <th>🏢 הוצאה</th>
+                        <th>📝 תיאור</th>
+                        <th>📦 כמות</th>
+                        <th>💰 מחיר קניה</th>
+                        <th>🏪 מחיר מכירה</th>
+                        <th>🌐 מחיר אונליין</th>
+                        <th>⚙️ פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="book-table">
+                    <tr id="no-books">
+                        <td colspan="8">📭 אין ספרים במלאי</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="loader" id="loader"></div>
+
+        <div class="modal" id="book-modal">
+            <div class="modal-content">
+                <h2 id="modal-title">הוסף ספר חדש</h2>
+                <form id="book-form">
+                    <label for="book-name">שם ספר</label>
+                    <input type="text" id="book-name" required>
+
+                    <label for="publisher">הוצאה</label>
+                    <input type="text" id="publisher" required>
+
+                    <label for="category">תיאור</label>
+                    <input type="text" id="category">
+
+                    <label for="quantity">כמות</label>
+                    <input type="number" id="quantity" min="0">
+
+                    <label for="purchase-price">מחיר קניה</label>
+                    <input type="number" id="purchase-price" step="0.01">
+
+                    <label for="sale-price">מחיר מכירה</label>
+                    <input type="number" id="sale-price" step="0.01">
+
+                    <label for="online-price">מחיר אונליין</label>
+                    <input type="number" id="online-price" step="0.01">
+
+                    <button type="submit">שמור</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // ייבוא Firebase
+        import { db, handleFirebaseError, checkOnlineStatus } from '../firebase-config.js';
+        import { 
+            collection, 
+            addDoc, 
+            getDocs, 
+            doc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot,
+            query,
+            orderBy 
+        } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+
+        // הגדרת אוסף הספרים
+        const booksCollection = collection(db, 'books');
+
+        // פונקציות Firebase במקום localStorage
+        const saveToLocalStorage = (books) => {
+            // גיבוי מקומי למצב אופליין
+            localStorage.setItem("books", JSON.stringify(books));
+        };
+
+        const loadFromLocalStorage = () => {
+            const books = localStorage.getItem("books");
+            return books ? JSON.parse(books) : [];
+        };
+
+        const addBook = async (book) => {
+            try {
+                if (!checkOnlineStatus()) {
+                    // מצב אופליין - שמירה מקומית
+                    const books = loadFromLocalStorage();
+                    const newBook = { ...book, id: Date.now(), offline: true };
+                    books.push(newBook);
+                    saveToLocalStorage(books);
+                    return newBook;
+                }
+                
+                // מצב אונליין - שמירה ב-Firebase
+                const docRef = await addDoc(booksCollection, {
+                    ...book,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                });
+                
+                const newBook = { ...book, id: docRef.id };
+                
+                // גיבוי מקומי
+                const localBooks = loadFromLocalStorage();
+                localBooks.push(newBook);
+                saveToLocalStorage(localBooks);
+                
+                return newBook;
+            } catch (error) {
+                console.error('שגיאה בהוספת ספר:', error);
+                throw new Error(handleFirebaseError(error));
+            }
+        };
+
+        const getBooks = async () => {
+            try {
+                if (!checkOnlineStatus()) {
+                    // מצב אופליין - טעינה מקומית
+                    return loadFromLocalStorage();
+                }
+                
+                // מצב אונליין - טעינה מ-Firebase
+                const q = query(booksCollection, orderBy('createdAt', 'desc'));
+                const querySnapshot = await getDocs(q);
+                const books = [];
+                
+                querySnapshot.forEach((doc) => {
+                    books.push({ id: doc.id, ...doc.data() });
+                });
+                
+                // גיבוי מקומי
+                saveToLocalStorage(books);
+                return books;
+            } catch (error) {
+                console.error('שגיאה בטעינת ספרים:', error);
+                // במקרה של שגיאה, נחזור לנתונים המקומיים
+                return loadFromLocalStorage();
+            }
+        };
+
+        const updateBook = async (id, updatedBook) => {
+            try {
+                if (!checkOnlineStatus()) {
+                    // מצב אופליין - עדכון מקומי
+                    const books = loadFromLocalStorage();
+                    const index = books.findIndex(book => book.id === id);
+                    if (index !== -1) {
+                        books[index] = { ...updatedBook, id, offline: true };
+                        saveToLocalStorage(books);
+                    }
+                    return;
+                }
+                
+                // מצב אונליין - עדכון ב-Firebase
+                const bookRef = doc(db, 'books', id);
+                await updateDoc(bookRef, {
+                    ...updatedBook,
+                    updatedAt: new Date()
+                });
+                
+                // עדכון גיבוי מקומי
+                const books = loadFromLocalStorage();
+                const index = books.findIndex(book => book.id === id);
+                if (index !== -1) {
+                    books[index] = { ...updatedBook, id };
+                    saveToLocalStorage(books);
+                }
+            } catch (error) {
+                console.error('שגיאה בעדכון ספר:', error);
+                throw new Error(handleFirebaseError(error));
+            }
+        };
+
+        const deleteBook = async (id) => {
+            try {
+                if (!checkOnlineStatus()) {
+                    // מצב אופליין - מחיקה מקומית
+                    const books = loadFromLocalStorage();
+                    const updatedBooks = books.filter(book => book.id !== id);
+                    saveToLocalStorage(updatedBooks);
+                    return;
+                }
+                
+                // מצב אונליין - מחיקה מ-Firebase
+                await deleteDoc(doc(db, 'books', id));
+                
+                // מחיקה מהגיבוי המקומי
+                const books = loadFromLocalStorage();
+                const updatedBooks = books.filter(book => book.id !== id);
+                saveToLocalStorage(updatedBooks);
+            } catch (error) {
+                console.error('שגיאה במחיקת ספר:', error);
+                throw new Error(handleFirebaseError(error));
+            }
+        };
+
+        const updateSummaryRow = (books) => {
+            // Count unique books and publishers
+            const uniqueBooks = new Set(books.map(book => (book.name || '').toLowerCase())).size;
+            const uniquePublishers = new Set(books.map(book => (book.publisher || '').toLowerCase())).size;
+            
+            const totalQuantity = books.reduce((sum, book) => sum + (Number(book.quantity) || 0), 0);
+            const totalPurchaseValue = books.reduce((sum, book) => sum + ((Number(book.purchasePrice) || 0) * (Number(book.quantity) || 0)), 0);
+            const totalSaleValue = books.reduce((sum, book) => sum + ((Number(book.salePrice) || 0) * (Number(book.quantity) || 0)), 0);
+            const totalOnlineValue = books.reduce((sum, book) => sum + (((Number(book.onlinePrice) || 0) * (Number(book.quantity) || 0))), 0);
+
+            const elBooks = document.getElementById('summary-books');
+            const elPublishers = document.getElementById('summary-publishers');
+            const elQty = document.getElementById('summary-quantity');
+            const elPurchase = document.getElementById('summary-purchase');
+            const elSale = document.getElementById('summary-sale');
+            const elOnline = document.getElementById('summary-online');
+
+            elBooks.textContent = `${uniqueBooks} ספרים`;
+            elPublishers.textContent = `${uniquePublishers} הוצאות`;
+            elQty.textContent = totalQuantity;
+            elPurchase.textContent = `₪${totalPurchaseValue.toFixed(2)}`;
+            elSale.textContent = `₪${totalSaleValue.toFixed(2)}`;
+            elOnline.textContent = `₪${totalOnlineValue.toFixed(2)}`;
+
+            // Highlight zero values like out-of-stock everywhere
+            const toggleZero = (el, n) => el.classList.toggle('out-of-stock', Number(n) === 0);
+            toggleZero(elBooks, uniqueBooks);
+            toggleZero(elPublishers, uniquePublishers);
+            toggleZero(elQty, totalQuantity);
+            toggleZero(elPurchase, totalPurchaseValue);
+            toggleZero(elSale, totalSaleValue);
+            toggleZero(elOnline, totalOnlineValue);
+        };
+
+        const renderBooks = async (searchTerm = '') => {
+            let books = await getBooks();
+            
+            // Add IDs to books that don't have them
+            let needsUpdate = false;
+            books = books.map(book => {
+                if (!book.id) {
+                    book.id = Date.now() + Math.random(); // Add unique ID only if missing
+                    needsUpdate = true;
+                }
+                return book;
+            });
+            
+            // Save only if we added new IDs
+            if (needsUpdate) {
+                saveToLocalStorage(books);
+            }
+
+            // Filter books based on search term
+            if (searchTerm) {
+                books = books.filter(book => 
+                    book.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    book.publisher.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    book.category.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+
+            // Sort books by publisher (הוצאה)
+            books.sort((a, b) => a.publisher.localeCompare(b.publisher, 'he'));
+
+            bookTable.innerHTML = "";
+            if (books.length === 0) {
+                noBooksRow.style.display = "table-row";
+                noBooksRow.innerHTML = searchTerm ? 
+                    '<td colspan="8">לא נמצאו ספרים התואמים לחיפוש</td>' :
+                    '<td colspan="8">אין ספרים במלאי</td>';
+            } else {
+                noBooksRow.style.display = "none";
+                books.forEach(book => {
+                    const row = document.createElement("tr");
+                    const zeroClassAttr = (n) => (Number(n) === 0 ? 'class="out-of-stock"' : '');
+                    const quantityClass = Number(book.quantity) === 0 ? 'class="out-of-stock"' : '';
+                    row.innerHTML = `
+                        <td>${book.name}</td>
+                        <td>${book.publisher}</td>
+                        <td>${book.category}</td>
+                        <td ${quantityClass}>${book.quantity}</td>
+                        <td ${zeroClassAttr(book.purchasePrice)}>₪${(Number(book.purchasePrice) || 0).toFixed(2)}</td>
+                        <td ${zeroClassAttr(book.salePrice)}>₪${(Number(book.salePrice) || 0).toFixed(2)}</td>
+                        <td ${zeroClassAttr(book.onlinePrice)}>₪${(Number(book.onlinePrice) || 0).toFixed(2)}</td>
+                        <td class="actions">
+                            <button class="edit" data-id="${book.id}">ערוך</button>
+                            <button class="delete" data-id="${book.id}">מחק</button>
+                        </td>
+                    `;
+                    bookTable.appendChild(row);
+                });
+            }
+            
+            // Update summary row based on current view
+            const allBooks = await getBooks();
+            updateSummaryRow(searchTerm ? books : allBooks);
+        };
+
+        const exportToExcel = (books) => {
+            const headers = ["שם ספר", "הוצאה", "תיאור", "כמות", "מחיר קניה", "מחיר מכירה", "מחיר אונליין"];
+            const rows = books.map(book => [
+                book.name,
+                book.publisher,
+                book.category,
+                book.quantity,
+                book.purchasePrice,
+                book.salePrice,
+                book.onlinePrice || 0
+            ]);
+
+            const worksheet = [headers, ...rows];
+            const csvContent = worksheet.map(row => row.join(",")).join("\n");
+
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "books_inventory.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        const importFromExcel = (file) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const csvContent = event.target.result;
+                const rows = csvContent.split("\n").map(row => row.split(","));
+                const headers = rows.shift(); // Remove headers
+
+                const books = rows.map(row => ({
+                    id: Date.now() + Math.random(), // Generate unique ID
+                    name: row[0],
+                    publisher: row[1],
+                    category: row[2],
+                    quantity: parseInt(row[3]) || 0,
+                    purchasePrice: parseFloat(row[4]) || 0,
+                    salePrice: parseFloat(row[5]) || 0,
+                    onlinePrice: parseFloat(row[6]) || 0
+                }));
+
+                saveToLocalStorage(books);
+                renderBooks();
+            };
+            reader.readAsText(file);
+        };
+
+        const ensureUniqueIds = () => {
+            const books = loadFromLocalStorage();
+            const updatedBooks = books.map(book => {
+                if (!book.id) {
+                    return { ...book, id: Date.now() + Math.random() }; // Add unique ID if missing
+                }
+                return book;
+            });
+            saveToLocalStorage(updatedBooks);
+        };
+
+        const bookForm = document.getElementById("book-form");
+        const bookTable = document.getElementById("book-table");
+        const bookModal = document.getElementById("book-modal");
+        const modalTitle = document.getElementById("modal-title");
+        const noBooksRow = document.getElementById("no-books");
+        const loader = document.getElementById("loader");
+        const addBookButton = document.getElementById("add-book");
+        let editingBookId = null;
+
+            bookForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const book = {
+                name: document.getElementById("book-name").value,
+                publisher: document.getElementById("publisher").value,
+                category: document.getElementById("category").value,
+                quantity: parseInt(document.getElementById("quantity").value) || 0,
+                purchasePrice: parseFloat(document.getElementById("purchase-price").value) || 0,
+                salePrice: parseFloat(document.getElementById("sale-price").value) || 0,
+                onlinePrice: parseFloat(document.getElementById("online-price").value) || 0
+            };            if (editingBookId) {
+                await updateBook(editingBookId, book);
+            } else {
+                await addBook(book);
+            }
+
+            bookModal.style.display = "none";
+            bookForm.reset();
+            editingBookId = null;
+            renderBooks();
+            
+            // Auto-export after add/edit
+            const books = await getBooks();
+            exportToExcel(books);
+        });
+
+        document.getElementById("add-book").addEventListener("click", () => {
+            modalTitle.textContent = "הוסף ספר חדש";
+            bookModal.style.display = "flex";
+        });
+
+        bookTable.addEventListener("click", async (e) => {
+            if (e.target.classList.contains("edit")) {
+                const id = parseFloat(e.target.dataset.id);
+                const books = await getBooks();
+                const book = books.find(b => b.id === id);
+                if (book) {
+                    document.getElementById("book-name").value = book.name;
+                    document.getElementById("publisher").value = book.publisher;
+                    document.getElementById("category").value = book.category;
+                    document.getElementById("quantity").value = book.quantity;
+                    document.getElementById("purchase-price").value = book.purchasePrice;
+                    document.getElementById("sale-price").value = book.salePrice;
+                    document.getElementById("online-price").value = book.onlinePrice || 0;
+
+                    modalTitle.textContent = "ערוך ספר";
+                    bookModal.style.display = "flex";
+                    editingBookId = id;
+                }
+            } else if (e.target.classList.contains("delete")) {
+                const id = parseFloat(e.target.dataset.id);
+                if (confirm("האם אתה בטוח שברצונך למחוק את הספר?")) {
+                    await deleteBook(id);
+                    renderBooks();
+                    
+                    // Auto-export after delete
+                    const books = await getBooks();
+                    exportToExcel(books);
+                }
+            }
+        });
+
+        document.getElementById("export-button").addEventListener("click", async () => {
+            const books = await getBooks();
+            exportToExcel(books);
+        });
+
+        document.getElementById("import-label").addEventListener("click", () => {
+            document.getElementById("import-button").click();
+        });
+
+        document.getElementById("import-button").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                importFromExcel(file);
+            }
+        });
+
+        window.addEventListener("click", (e) => {
+            if (e.target === bookModal) {
+                bookModal.style.display = "none";
+                bookForm.reset();
+                editingBookId = null;
+            }
+        });
+
+        // Search functionality
+        document.getElementById("search").addEventListener("input", (e) => {
+            const searchTerm = e.target.value;
+            renderBooks(searchTerm);
+        });
+
+        // אתחול האפליקציה
+        async function initializeApp() {
+            try {
+                // הצגת מסך טעינה
+                const loader = document.getElementById('loader');
+                if (loader) loader.style.display = 'block';
+                
+                if (checkOnlineStatus()) {
+                    // הגדרת מאזין לשינויים בזמן אמת
+                    const q = query(booksCollection, orderBy('createdAt', 'desc'));
+                    onSnapshot(q, (snapshot) => {
+                        const books = [];
+                        snapshot.forEach((doc) => {
+                            books.push({ id: doc.id, ...doc.data() });
+                        });
+                        saveToLocalStorage(books);
+                        renderBooks();
+                    }, (error) => {
+                        console.error('שגיאה במאזין Firebase:', error);
+                        renderBooks(); // טעינה מנתונים מקומיים
+                    });
+                } else {
+                    // מצב אופליין - טעינה מקומית
+                    renderBooks();
+                }
+                
+                if (loader) loader.style.display = 'none';
+            } catch (error) {
+                console.error('שגיאה באתחול האפליקציה:', error);
+                ensureUniqueIds();
+                renderBooks();
+            }
+        }
+
+        // פונקציה לסנכרון נתונים אופליין
+        async function syncOfflineData() {
+            if (!checkOnlineStatus()) return;
+            
+            const localBooks = loadFromLocalStorage();
+            const offlineBooks = localBooks.filter(book => book.offline);
+            
+            for (const book of offlineBooks) {
+                try {
+                    if (book.offline) {
+                        delete book.offline;
+                        delete book.id; // נשלח בלי ID כדי שFirebase יצור אחד חדש
+                        await addDoc(booksCollection, {
+                            ...book,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
+                        });
+                    }
+                } catch (error) {
+                    console.error('שגיאה בסנכרון:', error);
+                }
+            }
+        }
+
+        // מאזין לחזרת החיבור לאינטרנט
+        window.addEventListener('online', () => {
+            syncOfflineData();
+        });
+
+        // אתחול האפליקציה
+        ensureUniqueIds();
+        initializeApp();
+    </script>
+</body>
+</html>
