@@ -40,9 +40,23 @@ export function handleFirebaseError(error) {
   return errorMessages[error.code] || `שגיאה: ${error.message}`;
 }
 
-// פונקציה לבדיקת חיבור לאינטרנט
+// פונקציה לבדיקת חיבור לאינטרנט ו-Firebase
+let firebaseBlocked = false;
+
 export function checkOnlineStatus() {
+  // אם Firebase חסום על ידי NetFree, עבור למצב אופליין
+  if (firebaseBlocked) {
+    console.log('🚫 Firebase blocked by NetFree - working offline');
+    return false;
+  }
+  
   return navigator.onLine;
+}
+
+// פונקציה לסימון שFirebase חסום
+export function markFirebaseBlocked() {
+  firebaseBlocked = true;
+  console.log('🚫 Firebase marked as blocked - switching to offline mode');
 }
 
 // פונקציה לטיפול במצב אופליין

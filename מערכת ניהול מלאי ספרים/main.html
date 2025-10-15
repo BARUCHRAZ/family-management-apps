@@ -595,7 +595,7 @@
 
     <script type="module">
         // ייבוא Firebase
-        import { db, handleFirebaseError, checkOnlineStatus } from '../firebase-config.js';
+        import { db, handleFirebaseError, checkOnlineStatus, markFirebaseBlocked } from '../firebase-config.js';
         import { 
             collection, 
             addDoc, 
@@ -681,23 +681,49 @@
                     return newBook;
                 }
                 
-                // מצב אונליין - שמירה ב-Firebase
-                const docRef = await addDoc(booksCollection, {
-                    ...book,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                });
-                
-                const newBook = { ...book, id: docRef.id };
-                
-                // גיבוי מקומי
-                const localBooks = loadFromLocalStorage();
-                localBooks.push(newBook);
-                saveToLocalStorage(localBooks);
-                
-                return newBook;
+                try {
+                    // מצב אונליין - שמירה ב-Firebase
+                    console.log('🌐 Attempting Firebase add...');
+                    const docRef = await addDoc(booksCollection, {
+                        ...book,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    });
+                    
+                    console.log('✅ Firebase add successful');
+                    const newBook = { ...book, id: docRef.id };
+                    
+                    // גיבוי מקומי
+                    const localBooks = loadFromLocalStorage();
+                    localBooks.push(newBook);
+                    saveToLocalStorage(localBooks);
+                    
+                    return newBook;
+                } catch (firebaseError) {
+                    console.error('🚫 Firebase add failed, switching to offline mode:', firebaseError);
+                    
+                    // סמן שFirebase חסום ועבור למצב אופליין
+                    markFirebaseBlocked();
+                    
+                    // בצע הוספה מקומית
+                    const books = loadFromLocalStorage();
+                    console.log('📋 Loaded existing books for offline add:', books.length, books.map(b => b.name));
+                    
+                    const existingIds = new Set(books.map(b => b.id).filter(id => id));
+                    let newId;
+                    do {
+                        newId = 'book_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+                    } while (existingIds.has(newId));
+                    
+                    const newBook = { ...book, id: newId, offline: true };
+                    books.push(newBook);
+                    console.log('➕ Adding book offline:', newBook.name, '- Array size before save:', books.length);
+                    saveToLocalStorage(books);
+                    console.log('📚 Added new book offline:', newBook.name, '- Total books after save:', books.length);
+                    return newBook;
+                }
             } catch (error) {
-                console.error('שגיאה בהוספת ספר:', error);
+                console.error('❌ Add operation failed:', error);
                 throw new Error(handleFirebaseError(error));
             }
         };
@@ -713,29 +739,42 @@
                     return localBooks;
                 }
                 
-                // מצב אונליין - טעינה מ-Firebase
-                const q = query(booksCollection, orderBy('createdAt', 'desc'));
-                const querySnapshot = await getDocs(q);
-                const firebaseBooks = [];
-                
-                querySnapshot.forEach((doc) => {
-                    firebaseBooks.push({ id: doc.id, ...doc.data() });
-                });
-                
-                console.log('🔄 getBooks Firebase result:', firebaseBooks.length, 'ספרים');
-                
-                // רק שמור אם יש נתונים מ-Firebase או אם אין נתונים מקומיים
-                const localBooks = loadFromLocalStorage();
-                if (firebaseBooks.length > 0 || localBooks.length === 0) {
-                    console.log('📊 getBooks: Updating localStorage with Firebase data');
-                    saveToLocalStorage(firebaseBooks);
-                    return firebaseBooks;
-                } else {
-                    console.log('⚠️ getBooks: Firebase empty, using localStorage data:', localBooks.length, 'ספרים');
+                try {
+                    // מצב אונליין - טעינה מ-Firebase
+                    console.log('🌐 Attempting Firebase get...');
+                    const q = query(booksCollection, orderBy('createdAt', 'desc'));
+                    const querySnapshot = await getDocs(q);
+                    const firebaseBooks = [];
+                    
+                    querySnapshot.forEach((doc) => {
+                        firebaseBooks.push({ id: doc.id, ...doc.data() });
+                    });
+                    
+                    console.log('✅ Firebase get successful:', firebaseBooks.length, 'ספרים');
+                    
+                    // רק שמור אם יש נתונים מ-Firebase או אם אין נתונים מקומיים
+                    const localBooks = loadFromLocalStorage();
+                    if (firebaseBooks.length > 0 || localBooks.length === 0) {
+                        console.log('📊 getBooks: Updating localStorage with Firebase data');
+                        saveToLocalStorage(firebaseBooks);
+                        return firebaseBooks;
+                    } else {
+                        console.log('⚠️ getBooks: Firebase empty, using localStorage data:', localBooks.length, 'ספרים');
+                        return localBooks;
+                    }
+                } catch (firebaseError) {
+                    console.error('🚫 Firebase get failed, switching to offline mode:', firebaseError);
+                    
+                    // סמן שFirebase חסום ועבור למצב אופליין
+                    markFirebaseBlocked();
+                    
+                    // החזר נתונים מקומיים
+                    const localBooks = loadFromLocalStorage();
+                    console.log('📚 getBooks returning offline data:', localBooks.length, 'books');
                     return localBooks;
                 }
             } catch (error) {
-                console.error('שגיאה בטעינת ספרים:', error);
+                console.error('❌ Get operation failed:', error);
                 // במקרה של שגיאה, נחזור לנתונים המקומיים
                 return loadFromLocalStorage();
             }
@@ -789,15 +828,32 @@
                     return;
                 }
                 
-                // מצב אונליין - מחיקה מ-Firebase
-                await deleteDoc(doc(db, 'books', id));
-                
-                // מחיקה מהגיבוי המקומי
-                const books = loadFromLocalStorage();
-                const updatedBooks = books.filter(book => String(book.id) !== String(id));
-                saveToLocalStorage(updatedBooks);
+                try {
+                    // מצב אונליין - נסה מחיקה מ-Firebase
+                    console.log('🌐 Attempting Firebase delete...');
+                    await deleteDoc(doc(db, 'books', id));
+                    console.log('✅ Firebase delete successful');
+                    
+                    // מחיקה מהגיבוי המקומי
+                    const books = loadFromLocalStorage();
+                    const updatedBooks = books.filter(book => String(book.id) !== String(id));
+                    saveToLocalStorage(updatedBooks);
+                } catch (firebaseError) {
+                    console.error('🚫 Firebase delete failed, switching to offline mode:', firebaseError);
+                    
+                    // סמן שFirebase חסום ועבור למצב אופליין
+                    markFirebaseBlocked();
+                    
+                    // בצע מחיקה מקומית
+                    const books = loadFromLocalStorage();
+                    console.log('📋 Books before offline delete:', books.length, books.map(b => `${b.name}(${b.id})`));
+                    const updatedBooks = books.filter(book => String(book.id) !== String(id));
+                    console.log('📋 Books after offline delete:', updatedBooks.length, updatedBooks.map(b => `${b.name}(${b.id})`));
+                    saveToLocalStorage(updatedBooks);
+                    console.log('✅ Offline delete completed successfully');
+                }
             } catch (error) {
-                console.error('שגיאה במחיקת ספר:', error);
+                console.error('❌ Delete operation failed:', error);
                 throw new Error(handleFirebaseError(error));
             }
         };
