@@ -723,10 +723,11 @@
 
         const updateBook = async (id, updatedBook) => {
             try {
+                console.log('📝 Updating book with ID:', id);
                 if (!checkOnlineStatus()) {
                     // מצב אופליין - עדכון מקומי
                     const books = loadFromLocalStorage();
-                    const index = books.findIndex(book => book.id === id);
+                    const index = books.findIndex(book => String(book.id) === String(id));
                     if (index !== -1) {
                         books[index] = { ...updatedBook, id, offline: true };
                         saveToLocalStorage(books);
@@ -743,7 +744,7 @@
                 
                 // עדכון גיבוי מקומי
                 const books = loadFromLocalStorage();
-                const index = books.findIndex(book => book.id === id);
+                const index = books.findIndex(book => String(book.id) === String(id));
                 if (index !== -1) {
                     books[index] = { ...updatedBook, id };
                     saveToLocalStorage(books);
@@ -756,10 +757,11 @@
 
         const deleteBook = async (id) => {
             try {
+                console.log('🗑️ Deleting book with ID:', id);
                 if (!checkOnlineStatus()) {
                     // מצב אופליין - מחיקה מקומית
                     const books = loadFromLocalStorage();
-                    const updatedBooks = books.filter(book => book.id !== id);
+                    const updatedBooks = books.filter(book => String(book.id) !== String(id));
                     saveToLocalStorage(updatedBooks);
                     return;
                 }
@@ -769,7 +771,7 @@
                 
                 // מחיקה מהגיבוי המקומי
                 const books = loadFromLocalStorage();
-                const updatedBooks = books.filter(book => book.id !== id);
+                const updatedBooks = books.filter(book => String(book.id) !== String(id));
                 saveToLocalStorage(updatedBooks);
             } catch (error) {
                 console.error('שגיאה במחיקת ספר:', error);
@@ -959,6 +961,7 @@
             
             try {
                 if (editingBookId) {
+                    console.log('📝 Saving edited book with ID:', editingBookId);
                     await updateBook(editingBookId, book);
                     console.log('✏️ ספר עודכן בהצלחה');
                 } else {
@@ -992,9 +995,10 @@
 
         bookTable.addEventListener("click", async (e) => {
             if (e.target.classList.contains("edit")) {
-                const id = parseFloat(e.target.dataset.id);
+                const id = e.target.dataset.id;
+                console.log('🔧 Edit button clicked, ID:', id);
                 const books = await getBooks();
-                const book = books.find(b => b.id === id);
+                const book = books.find(b => String(b.id) === String(id));
                 if (book) {
                     document.getElementById("book-name").value = book.name;
                     document.getElementById("publisher").value = book.publisher;
@@ -1009,7 +1013,8 @@
                     editingBookId = id;
                 }
             } else if (e.target.classList.contains("delete")) {
-                const id = parseFloat(e.target.dataset.id);
+                const id = e.target.dataset.id;
+                console.log('🗑️ Delete button clicked, ID:', id);
                 if (confirm("האם אתה בטוח שברצונך למחוק את הספר?")) {
                     await deleteBook(id);
                     renderBooks();
