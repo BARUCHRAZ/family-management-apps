@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת ניהול מלאי ספרים - מצב אופליין מושלם</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            text-align: center;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 1rem;
+        }
+
+        .offline-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        main {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 1.2rem;
+        }
+
+        .books-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: right;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 2rem;
+            border-bottom: 1px solid #eee;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            padding: 2rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            animation: slideInLeft 0.3s ease;
+            max-width: 400px;
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .data-management {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-management h3 {
+            color: #8b4513;
+            margin-bottom: 1rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            background: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            border: 2px dashed #ccc;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-wrapper:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            table {
+                font-size: 0.9rem;
+            }
+            
+            th, td {
+                padding: 0.7rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>📚 מערכת ניהול מלאי ספרים</h1>
+        <p class="subtitle">מצב אופליין מושלם - תואם NetFree</p>
+        <div class="offline-badge">
+            🔒 שמירה מקומית מאובטחת
+        </div>
+    </header>
+
+    <main>
+        <!-- בקרות ראשיות -->
+        <div class="card">
+            <div class="controls">
+                <button class="btn btn-primary" onclick="openAddModal()">
+                    ➕ הוסף ספר חדש
+                </button>
+                <button class="btn btn-success" onclick="exportData()">
+                    📊 יצא נתונים
+                </button>
+                <button class="btn btn-info" onclick="document.getElementById('importFile').click()">
+                    📥 ייבא נתונים
+                </button>
+                <button class="btn btn-warning" onclick="createBackup()">
+                    💾 יצור גיבוי
+                </button>
+            </div>
+        </div>
+
+        <!-- סטטיסטיקות -->
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-number" id="totalBooks">0</span>
+                <div class="stat-label">סה״כ ספרים</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="totalValue">₪0</span>
+                <div class="stat-label">סה״כ שווי</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="availableBooks">0</span>
+                <div class="stat-label">ספרים זמינים</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="categoriesCount">0</span>
+                <div class="stat-label">קטגוריות</div>
+            </div>
+        </div>
+
+        <!-- חיפוש -->
+        <div class="card">
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="חפש לפי שם ספר, מחבר, ISBN או קטגוריה...">
+                <div class="search-icon">🔍</div>
+            </div>
+        </div>
+
+        <!-- ניהול נתונים -->
+        <div class="data-management">
+            <h3>🔧 ניהול נתונים מתקדם</h3>
+            <div class="controls">
+                <div class="file-input-wrapper">
+                    <input type="file" id="importFile" accept=".json,.csv" onchange="importData(this.files[0])">
+                    📁 בחר קובץ לייבוא
+                </div>
+                <button class="btn btn-info" onclick="showDataInfo()">
+                    📊 מידע על הנתונים
+                </button>
+                <button class="btn btn-warning" onclick="clearAllData()">
+                    🗑️ נקה הכל
+                </button>
+            </div>
+        </div>
+
+        <!-- טבלת ספרים -->
+        <div class="books-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ISBN</th>
+                        <th>שם הספר</th>
+                        <th>מחבר</th>
+                        <th>מוציא לאור</th>
+                        <th>קטגוריה</th>
+                        <th>מחיר</th>
+                        <th>כמות</th>
+                        <th>סטטוס</th>
+                        <th>פעולות</th>
+                    </tr>
+                </thead>
+                <tbody id="booksTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <!-- עמודה ריקה -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="icon">📚</div>
+            <h3>אין ספרים במערכת</h3>
+            <p>התחל על ידי הוספת הספר הראשון שלך</p>
+            <button class="btn btn-primary" onclick="openAddModal()" style="margin-top: 1rem;">
+                ➕ הוסף ספר ראשון
+            </button>
+        </div>
+    </main>
+
+    <!-- מודאל הוספה/עריכה -->
+    <div id="bookModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">הוסף ספר חדש</h3>
+            </div>
+            <div class="modal-body">
+                <form id="bookForm">
+                    <div class="form-group">
+                        <label for="isbn">ISBN:</label>
+                        <input type="text" id="isbn" name="isbn" placeholder="לדוגמה: 978-965-05-0123-4">
+                    </div>
+                    <div class="form-group">
+                        <label for="title">שם הספר: *</label>
+                        <input type="text" id="title" name="title" required placeholder="הכנס שם הספר">
+                    </div>
+                    <div class="form-group">
+                        <label for="author">מחבר: *</label>
+                        <input type="text" id="author" name="author" required placeholder="הכנס שם המחבר">
+                    </div>
+                    <div class="form-group">
+                        <label for="publisher">מוציא לאור:</label>
+                        <input type="text" id="publisher" name="publisher" placeholder="הכנס מוציא לאור">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">קטגוריה:</label>
+                        <input type="text" id="category" name="category" placeholder="לדוגמה: ספרות, מדע, היסטוריה">
+                    </div>
+                    <div class="form-group">
+                        <label for="price">מחיר (₪):</label>
+                        <input type="number" id="price" name="price" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">כמות:</label>
+                        <input type="number" id="quantity" name="quantity" min="1" value="1" placeholder="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">סטטוס:</label>
+                        <select id="status" name="status">
+                            <option value="זמין">זמין</option>
+                            <option value="מושאל">מושאל</option>
+                            <option value="לא זמין">לא זמין</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">הערות:</label>
+                        <textarea id="notes" name="notes" rows="3" placeholder="הערות נוספות על הספר"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-warning" onclick="closeModal()">ביטול</button>
+                <button type="button" class="btn btn-success" onclick="saveBook()">💾 שמור</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 מערכת ניהול ספרים - מצב אופליין מושלם');
+        console.log('🔒 כל הנתונים נשמרים מקומית - תואם NetFree 100%');
+
+        // משתנים גלובליים
+        let books = [];
+        let editingBookId = null;
+        const STORAGE_KEY = 'booksInventory_offline_v4';
+
+        // פונקציות LocalStorage מתקדמות
+        const saveToLocalStorage = (books) => {
+            try {
+                const data = {
+                    books: books,
+                    timestamp: Date.now(),
+                    version: 4,
+                    source: 'offline_perfect',
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        language: navigator.language
+                    }
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                console.log(`💾 נשמרו ${books.length} ספרים ב-LocalStorage`);
+                return true;
+            } catch (error) {
+                console.error('❌ שגיאה בשמירה ל-LocalStorage:', error);
+                showNotification('שגיאה בשמירת הנתונים', 'error');
+                return false;
+            }
+        };
+
+        const loadFromLocalStorage = () => {
+            try {
+                // נסה לטעון מהגרסה החדשה
+                let data = localStorage.getItem(STORAGE_KEY);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    console.log(`📚 נטענו ${parsed.books?.length || 0} ספרים (גרסה ${parsed.version})`);
+                    return parsed.books || [];
+                }
+
+                // נסה גרסאות ישנות
+                const oldKeys = ['booksInventory_v3', 'booksInventory_v2', 'booksInventory'];
+                for (const key of oldKeys) {
+                    data = localStorage.getItem(key);
+                    if (data) {
+                        const parsed = JSON.parse(data);
+                        const books = parsed.books || (Array.isArray(parsed) ? parsed : []);
+                        console.log(`🔄 מועבר מגרסה ישנה: ${books.length} ספרים`);
+                        
+                        // שמור בפורמט החדש
+                        if (books.length > 0) {
+                            saveToLocalStorage(books);
+                        }
+                        return books;
+                    }
+                }
+
+                console.log('📝 אין נתונים קיימים - התחלה חדשה');
+                return [];
+            } catch (error) {
+                console.error('❌ שגיאה בטעינה מ-LocalStorage:', error);
+                return [];
+            }
+        };
+
+        // יצירת ID ייחודי
+        const generateId = () => {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        };
+
+        // הודעות משוב מתקדמות
+        const showNotification = (message, type = 'info') => {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span>${getNotificationIcon(type)}</span>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.transform = 'translateX(-100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        };
+
+        const getNotificationIcon = (type) => {
+            const icons = {
+                success: '✅',
+                error: '❌', 
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+            return icons[type] || 'ℹ️';
+        };
+
+        // פונקציות מודאל
+        const openAddModal = () => {
+            editingBookId = null;
+            document.getElementById('modalTitle').textContent = 'הוסף ספר חדש';
+            document.getElementById('bookForm').reset();
+            document.getElementById('quantity').value = '1';
+            document.getElementById('status').value = 'זמין';
+            document.getElementById('bookModal').style.display = 'block';
+        };
+
+        const openEditModal = (book) => {
+            editingBookId = book.id;
+            document.getElementById('modalTitle').textContent = 'ערוך ספר';
+            
+            // מילוי השדות
+            Object.keys(book).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = book[key] || '';
+                }
+            });
+            
+            document.getElementById('bookModal').style.display = 'block';
+        };
+
+        const closeModal = () => {
+            document.getElementById('bookModal').style.display = 'none';
+            document.getElementById('bookForm').reset();
+            editingBookId = null;
+        };
+
+        // שמירת ספר
+        const saveBook = () => {
+            const form = document.getElementById('bookForm');
+            const formData = new FormData(form);
+            
+            // ולידציה
+            if (!formData.get('title').trim() || !formData.get('author').trim()) {
+                showNotification('נא למלא את השדות החובה (שם ספר ומחבר)', 'error');
+                return;
+            }
+
+            const bookData = {
+                isbn: formData.get('isbn')?.trim() || '',
+                title: formData.get('title').trim(),
+                author: formData.get('author').trim(),
+                publisher: formData.get('publisher')?.trim() || '',
+                category: formData.get('category')?.trim() || 'כללי',
+                price: parseFloat(formData.get('price')) || 0,
+                quantity: parseInt(formData.get('quantity')) || 1,
+                status: formData.get('status') || 'זמין',
+                notes: formData.get('notes')?.trim() || '',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+
+            if (editingBookId) {
+                // עריכת ספר קיים
+                const index = books.findIndex(book => book.id === editingBookId);
+                if (index !== -1) {
+                    books[index] = { ...books[index], ...bookData, updatedAt: new Date().toISOString() };
+                    showNotification('הספר עודכן בהצלחה', 'success');
+                }
+            } else {
+                // הוספת ספר חדש
+                bookData.id = generateId();
+                books.push(bookData);
+                showNotification('הספר נוסף בהצלחה', 'success');
+            }
+
+            saveToLocalStorage(books);
+            renderBooks();
+            updateStats();
+            closeModal();
+        };
+
+        // מחיקת ספר
+        const deleteBook = (id) => {
+            if (confirm('האם אתה בטוח שברצונך למחוק את הספר?')) {
+                const book = books.find(b => b.id === id);
+                books = books.filter(book => book.id !== id);
+                saveToLocalStorage(books);
+                renderBooks();
+                updateStats();
+                showNotification(`הספר "${book?.title}" נמחק בהצלחה`, 'success');
+            }
+        };
+
+        // עיבוד טבלה
+        const renderBooks = (booksToRender = books) => {
+            const tbody = document.getElementById('booksTableBody');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (booksToRender.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                document.querySelector('.books-table').style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            document.querySelector('.books-table').style.display = 'block';
+
+            tbody.innerHTML = booksToRender.map(book => `
+                <tr>
+                    <td>${book.isbn || '-'}</td>
+                    <td><strong>${book.title}</strong></td>
+                    <td>${book.author}</td>
+                    <td>${book.publisher || '-'}</td>
+                    <td>
+                        <span style="background: #e3f2fd; color: #1976d2; padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.8rem;">
+                            ${book.category || 'כללי'}
+                        </span>
+                    </td>
+                    <td style="font-weight: bold; color: #2e7d32;">₪${(book.price || 0).toFixed(2)}</td>
+                    <td style="text-align: center; font-weight: bold;">${book.quantity || 1}</td>
+                    <td>
+                        <span class="status-badge status-${book.status?.replace(' ', '-')}" 
+                              style="padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.8rem; font-weight: 500; 
+                                     ${getStatusColor(book.status)}">
+                            ${book.status || 'זמין'}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <button class="btn btn-info btn-sm" onclick='openEditModal(${JSON.stringify(book)})' title="ערוך ספר">
+                            ✏️
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="deleteBook('${book.id}')" title="מחק ספר">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        };
+
+        const getStatusColor = (status) => {
+            const colors = {
+                'זמין': 'background: #d4edda; color: #155724;',
+                'מושאל': 'background: #fff3cd; color: #856404;',
+                'לא זמין': 'background: #f8d7da; color: #721c24;'
+            };
+            return colors[status] || colors['זמין'];
+        };
+
+        // עדכון סטטיסטיקות
+        const updateStats = () => {
+            const totalBooks = books.length;
+            const totalValue = books.reduce((sum, book) => sum + ((book.price || 0) * (book.quantity || 1)), 0);
+            const availableBooks = books.filter(book => book.status === 'זמין').length;
+            const categories = [...new Set(books.map(book => book.category).filter(Boolean))].length;
+
+            document.getElementById('totalBooks').textContent = totalBooks;
+            document.getElementById('totalValue').textContent = `₪${totalValue.toLocaleString('he-IL', {minimumFractionDigits: 2})}`;
+            document.getElementById('availableBooks').textContent = availableBooks;
+            document.getElementById('categoriesCount').textContent = categories;
+        };
+
+        // חיפוש מתקדם
+        const setupSearch = () => {
+            const searchInput = document.getElementById('searchInput');
+            let searchTimeout;
+
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    const searchTerm = e.target.value.toLowerCase().trim();
+                    
+                    if (!searchTerm) {
+                        renderBooks();
+                        return;
+                    }
+
+                    const filteredBooks = books.filter(book => 
+                        (book.title?.toLowerCase().includes(searchTerm)) ||
+                        (book.author?.toLowerCase().includes(searchTerm)) ||
+                        (book.isbn?.toLowerCase().includes(searchTerm)) ||
+                        (book.category?.toLowerCase().includes(searchTerm)) ||
+                        (book.publisher?.toLowerCase().includes(searchTerm)) ||
+                        (book.notes?.toLowerCase().includes(searchTerm))
+                    );
+                    
+                    renderBooks(filteredBooks);
+                    showNotification(`נמצאו ${filteredBooks.length} תוצאות`, 'info');
+                }, 300);
+            });
+        };
+
+        // ייצוא נתונים מתקדם
+        const exportData = () => {
+            if (books.length === 0) {
+                showNotification('אין ספרים לייצא', 'error');
+                return;
+            }
+
+            const exportData = {
+                metadata: {
+                    exportDate: new Date().toISOString(),
+                    totalBooks: books.length,
+                    version: 4,
+                    source: 'FamilyManagementApps'
+                },
+                books: books
+            };
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+            
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(dataBlob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `ספרים_גיבוי_${new Date().toISOString().split('T')[0]}.json`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showNotification(`יוצאו ${books.length} ספרים בהצלחה`, 'success');
+        };
+
+        // ייבוא נתונים
+        const importData = (file) => {
+            if (!file) {
+                showNotification('נא לבחור קובץ', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    let importedBooks = [];
+
+                    // זיהוי פורמט הקובץ
+                    if (data.books && Array.isArray(data.books)) {
+                        // פורמט חדש עם metadata
+                        importedBooks = data.books;
+                    } else if (Array.isArray(data)) {
+                        // פורמט ישן - מערך ספרים
+                        importedBooks = data;
+                    } else {
+                        throw new Error('פורמט קובץ לא נתמך');
+                    }
+
+                    if (!importedBooks.length) {
+                        showNotification('הקובץ ריק או לא תקין', 'error');
+                        return;
+                    }
+
+                    // שאל את המשתמש איך לייבא
+                    const action = confirm(
+                        `הקובץ מכיל ${importedBooks.length} ספרים.\n\n` +
+                        `לחץ "אישור" להוסיף לרשימה הקיימת\n` +
+                        `לחץ "ביטול" להחליף את כל הרשימה`
+                    );
+
+                    if (!action) {
+                        // החלף את כל הרשימה
+                        books = importedBooks.map(book => ({
+                            ...book,
+                            id: book.id || generateId(),
+                            updatedAt: new Date().toISOString()
+                        }));
+                    } else {
+                        // הוסף לרשימה קיימת
+                        importedBooks.forEach(book => {
+                            if (book.title && book.author) {
+                                books.push({
+                                    ...book,
+                                    id: generateId(),
+                                    updatedAt: new Date().toISOString()
+                                });
+                            }
+                        });
+                    }
+
+                    saveToLocalStorage(books);
+                    renderBooks();
+                    updateStats();
+                    showNotification(`יובאו ${importedBooks.length} ספרים בהצלחה`, 'success');
+                    
+                } catch (error) {
+                    console.error('שגיאה בייבוא:', error);
+                    showNotification('שגיאה בייבוא הקובץ - ודא שהקובץ תקין', 'error');
+                }
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        };
+
+        // יצירת גיבוי אוטומטי
+        const createBackup = () => {
+            if (books.length === 0) {
+                showNotification('אין נתונים לגיבוי', 'error');
+                return;
+            }
+
+            const backupData = {
+                metadata: {
+                    backupDate: new Date().toISOString(),
+                    totalBooks: books.length,
+                    version: 4,
+                    deviceInfo: {
+                        userAgent: navigator.userAgent,
+                        platform: navigator.platform,
+                        language: navigator.language
+                    }
+                },
+                books: books,
+                categories: [...new Set(books.map(book => book.category).filter(Boolean))],
+                statistics: {
+                    totalValue: books.reduce((sum, book) => sum + ((book.price || 0) * (book.quantity || 1)), 0),
+                    availableBooks: books.filter(book => book.status === 'זמין').length,
+                    borrowedBooks: books.filter(book => book.status === 'מושאל').length
+                }
+            };
+
+            // שמירה ב-LocalStorage כגיבוי
+            const backupKey = `backup_${Date.now()}`;
+            localStorage.setItem(backupKey, JSON.stringify(backupData));
+
+            // הורדת הגיבוי כקובץ
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json;charset=utf-8' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `גיבוי_מלא_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+
+            showNotification('גיבוי מלא נוצר בהצלחה', 'success');
+        };
+
+        // מידע על הנתונים
+        const showDataInfo = () => {
+            const dataSize = new Blob([localStorage.getItem(STORAGE_KEY) || '']).size;
+            const lastUpdate = books.length > 0 ? 
+                Math.max(...books.map(book => new Date(book.updatedAt || book.createdAt || 0).getTime())) : 0;
+            
+            const info = `
+📊 מידע על הנתונים:
+• סה"כ ספרים: ${books.length}
+• גודל נתונים: ${(dataSize / 1024).toFixed(2)} KB
+• עדכון אחרון: ${lastUpdate ? new Date(lastUpdate).toLocaleString('he-IL') : 'לא זמין'}
+• קטגוריות: ${[...new Set(books.map(book => book.category).filter(Boolean))].length}
+• שווי כולל: ₪${books.reduce((sum, book) => sum + ((book.price || 0) * (book.quantity || 1)), 0).toLocaleString('he-IL')}
+            `.trim();
+
+            alert(info);
+        };
+
+        // ניקוי כל הנתונים
+        const clearAllData = () => {
+            if (books.length === 0) {
+                showNotification('אין נתונים למחיקה', 'info');
+                return;
+            }
+
+            const confirmText = `האם אתה בטוח שברצונך למחוק את כל ${books.length} הספרים?\n\nפעולה זו לא ניתנת לביטול!`;
+            
+            if (confirm(confirmText)) {
+                // יצור גיבוי לפני מחיקה
+                createBackup();
+                
+                books = [];
+                saveToLocalStorage(books);
+                renderBooks();
+                updateStats();
+                showNotification('כל הנתונים נמחקו (גיבוי נוצר אוטומטית)', 'info');
+            }
+        };
+
+        // אירועי מקלדת
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('bookModal').style.display === 'block') {
+                closeModal();
+            }
+            
+            // קיצורי מקלדת
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        openAddModal();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        document.getElementById('searchInput').focus();
+                        break;
+                }
+            }
+        });
+
+        // סגירת מודאל בלחיצה על הרקע
+        document.getElementById('bookModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('bookModal')) {
+                closeModal();
+            }
+        });
+
+        // אתחול האפליקציה
+        const initApp = () => {
+            console.log('🚀 מתחיל את מערכת ניהול הספרים המושלמת...');
+            
+            // טעינת נתונים
+            books = loadFromLocalStorage();
+            
+            // הגדרת מאזינים
+            setupSearch();
+            
+            // עיבוד ראשוני
+            renderBooks();
+            updateStats();
+            
+            console.log('✅ המערכת מוכנה לשימוש!');
+            console.log(`📚 נטענו ${books.length} ספרים`);
+            
+            // הודעת ברוכים הבאים
+            setTimeout(() => {
+                showNotification(`המערכת מוכנה! נטענו ${books.length} ספרים`, 'success');
+            }, 500);
+
+            // גיבוי אוטומטי כל שעה
+            setInterval(() => {
+                if (books.length > 0) {
+                    const backupKey = `auto_backup_${Date.now()}`;
+                    const backupData = { books, timestamp: Date.now() };
+                    localStorage.setItem(backupKey, JSON.stringify(backupData));
+                    
+                    // מחק גיבויים ישנים (שמור רק 5 אחרונים)
+                    const allKeys = Object.keys(localStorage);
+                    const backupKeys = allKeys.filter(key => key.startsWith('auto_backup_')).sort();
+                    while (backupKeys.length > 5) {
+                        localStorage.removeItem(backupKeys.shift());
+                    }
+                }
+            }, 3600000); // כל שעה
+        };
+
+        // הפעלת המערכת כשהדף נטען
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        console.log('🔒 מערכת אבטחה: כל הנתונים נשמרים מקומית בלבד');
+        console.log('🌐 NetFree Compatible: אין תקשורת עם שרתים חיצוניים');
+        console.log('⌨️ קיצורי מקלדת: Ctrl+N (חדש), Ctrl+S (ייצוא), Ctrl+F (חיפוש)');
+    </script>
+</body>
+</html>
