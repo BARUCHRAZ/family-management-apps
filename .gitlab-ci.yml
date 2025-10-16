@@ -1,67 +1,11 @@
-# GitLab CI/CD Configuration for Trading Bot
 stages:
-  - build
-  - deploy
+  - test
 
-variables:
-  NODE_VERSION: "18"
-  NPM_CONFIG_CACHE: ".npm"
-  TRADING_BOT_DIR: "בוט מינוף בירידות"
-  
-# Cache node_modules for faster builds
-cache:
-  paths:
-    - "בוט מינוף בירידות/node_modules/"
-    - .npm/
-
-# Build stage - prepare the trading bot
-build-trading-bot:
-  stage: build
-  image: node:${NODE_VERSION}
-  before_script:
-    - cd "בוט מינוף בירידות"/
+test:
+  stage: test
+  image: node:18
   script:
-    - echo "Installing dependencies..."
-    - npm ci --cache .npm --prefer-offline
-    - echo "Building application..."
+    - echo "Testing repository"
     - ls -la
-  artifacts:
-    paths:
-      - בוט מינוף בירידות/
-    expire_in: 1 hour
-  only:
-    - main
-
-# Deploy stage - serve the trading bot
-deploy-trading-bot:
-  stage: deploy
-  image: node:${NODE_VERSION}
-  before_script:
-    - cd "בוט מינוף בירידות"/
-    - npm ci --cache .npm --prefer-offline
-  script:
-    - echo "Starting trading bot server..."
-    - npm start
-  environment:
-    name: production
-    url: https://$CI_PROJECT_NAME.gitlab.io
-  only:
-    - main
-  when: manual  # Manual deployment for now
-
-# Static pages deployment for other apps
-pages:
-  stage: deploy
-  script:
-    - mkdir public
-    - cp index.html public/
-    - cp -r "מחשבון חיסכון משפחתי" public/savings-calculator/
-    - cp -r "מערכת חישוב מלגות" public/scholarships/
-    - cp -r "מערכת ניהול מלאי ספרים" public/books/
-    # Update links to point to GitLab for trading bot
-    - sed -i 's/trading-bot\/index.html/https:\/\/trading-bot-$CI_PROJECT_ID.gitlab.io/g' public/index.html
-  artifacts:
-    paths:
-      - public
   only:
     - main
