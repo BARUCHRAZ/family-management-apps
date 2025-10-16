@@ -21,6 +21,7 @@
     .app-card-savings { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
     .app-card-attendance { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
     .app-card-books { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .app-card-trading { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
   </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -30,11 +31,11 @@
     <!-- Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-4">המערכות שלי</h1>
-      <p class="text-lg text-gray-600 max-w-2xl mx-auto">שלוש אפליקציות מתקדמות עם Firebase - נתונים בענן, עבודה אופליין, וסנכרון אוטומטי</p>
+      <p class="text-lg text-gray-600 max-w-2xl mx-auto">אוסף של ארבע אפליקציות מתקדמות - כלים פיננסיים, ניהול ומסחר</p>
     </div>
 
     <!-- Apps Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
       
       <!-- מחשבון חיסכון משפחתי -->
       <div class="app-card app-card-savings rounded-2xl shadow-lg overflow-hidden cursor-pointer" onclick="window.location.href='מחשבון חיסכון משפחתי/מחשבון חיסכון משפחתי.html'">
@@ -44,7 +45,7 @@
           <p class="text-white/90 mb-4">חישוב צמיחת קרן משפחתית לאורך זמן, כולל הכנסות מילדים נשואים ועלויות חתונות</p>
           <div class="flex items-center text-white/80 text-sm">
             <span class="bg-white/20 px-3 py-1 rounded-full ml-2">תחזיות פיננסיות</span>
-            <span class="bg-white/20 px-3 py-1 rounded-full">☁️ Firebase</span>
+            <span class="bg-white/20 px-3 py-1 rounded-full">💾 LocalStorage</span>
           </div>
         </div>
       </div>
@@ -57,7 +58,7 @@
           <p class="text-white/90 mb-4">חישוב מלגות ונוכחות, העלאת קבצי CSV ומעקב אחר היסטוריית חישובים</p>
           <div class="flex items-center text-white/80 text-sm">
             <span class="bg-white/20 px-3 py-1 rounded-full ml-2">העלאת קבצים</span>
-            <span class="bg-white/20 px-3 py-1 rounded-full">☁️ Firebase</span>
+            <span class="bg-white/20 px-3 py-1 rounded-full">💾 LocalStorage</span>
           </div>
         </div>
       </div>
@@ -70,7 +71,20 @@
           <p class="text-white/90 mb-4">ניהול מלאי ספרים מלא, הוספה, עריכה, מחיקה, ייבוא וייצוא לאקסל</p>
           <div class="flex items-center text-white/80 text-sm">
             <span class="bg-white/20 px-3 py-1 rounded-full ml-2">ניהול מלאי</span>
-            <span class="bg-white/20 px-3 py-1 rounded-full">☁️ Firebase</span>
+            <span class="bg-white/20 px-3 py-1 rounded-full">💾 LocalStorage</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- בוט מינוף בירידות -->
+      <div class="app-card app-card-trading rounded-2xl shadow-lg overflow-hidden cursor-pointer" onclick="window.location.href='בוט מינוף בירידות/index.html'">
+        <div class="p-6 text-white">
+          <div class="text-6xl mb-4">📈</div>
+          <h2 class="text-2xl font-bold mb-3">סימולטור מסחר ומינוף</h2>
+          <p class="text-white/90 mb-4">סימולציה של אסטרטגיות מסחר עם מינוף, חיבור ל-IBKR ואופטימיזציה</p>
+          <div class="flex items-center text-white/80 text-sm">
+            <span class="bg-white/20 px-3 py-1 rounded-full ml-2">IBKR API</span>
+            <span class="bg-white/20 px-3 py-1 rounded-full">📊 סימולציה</span>
           </div>
         </div>
       </div>
