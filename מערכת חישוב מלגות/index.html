@@ -148,30 +148,14 @@
     <div id="printable-area"></div>
 
     <script type="module">
-        // ייבוא Firebase
-        import { db, handleFirebaseError, checkOnlineStatus } from '../firebase-config.js';
-        import { 
-            collection, 
-            addDoc, 
-            getDocs, 
-            doc, 
-            setDoc,
-            deleteDoc, 
-            onSnapshot,
-            query,
-            orderBy,
-            where 
-        } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
+        // מערכת חישוב מלגות - LocalStorage בלבד
+        console.log('🚀 Initializing Scholarship Calculator - LocalStorage only mode');
 
         // DOM Elements
         const fileUpload = document.getElementById('file-upload'), calculateBtn = document.getElementById('calculate-btn'), clearStorageBtn = document.getElementById('clear-storage-btn'), monthlyStipendInput = document.getElementById('monthly-stipend'), timePeriodsContainer = document.getElementById('time-periods-container'), addPeriodBtn = document.getElementById('add-period-btn'), resultsContainer = document.getElementById('results-container'), initialMessage = document.getElementById('initial-message'), loader = document.getElementById('loader'), errorMessage = document.getElementById('error-message'), resultsTableContainer = document.getElementById('results-table-container'), resultsBody = document.getElementById('results-body'), totalsRow = document.getElementById('totals-row'), exportBtn = document.getElementById('export-btn'), reportsBtn = document.getElementById('reports-btn'), dropZone = document.getElementById('drop-zone'), fileNameDisplay = document.getElementById('file-name-display'), summaryBar = document.getElementById('summary-bar'), reportModal = document.getElementById('report-modal'), closeModalBtn = document.getElementById('close-modal-btn'), generateGeneralReportBtn = document.getElementById('generate-general-report'), generateIndividualReportsBtn = document.getElementById('generate-individual-reports'), printableArea = document.getElementById('printable-area'), resultsTitle = document.getElementById('results-title'), loadHistoryBtn = document.getElementById('load-history-btn');
 
         let fileContent = null, processedData = [], rawStudentData = null, calculationParams = {};
         const STORAGE_INDEX_KEY = 'kollelCalculatorIndex';
-        
-        // הגדרת אוספי Firebase
-        const calculationsCollection = collection(db, 'calculations');
-        const studentsCollection = collection(db, 'students');
 
         // --- Event Listeners ---
         dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-blue-500', 'bg-gray-50'); });
@@ -198,33 +182,18 @@
         clearStorageBtn.addEventListener('click', async () => {
             if (confirm("פעולה זו תמחק את כל היסטוריית החישובים השמורה. האם להמשיך?")) {
                 try {
-                    if (checkOnlineStatus()) {
-                        // מחיקה מ-Firebase
-                        const [calculationsSnapshot, studentsSnapshot] = await Promise.all([
-                            getDocs(calculationsCollection),
-                            getDocs(studentsCollection)
-                        ]);
-                        
-                        const deletePromises = [];
-                        calculationsSnapshot.forEach(doc => {
-                            deletePromises.push(deleteDoc(doc.ref));
-                        });
-                        studentsSnapshot.forEach(doc => {
-                            deletePromises.push(deleteDoc(doc.ref));
-                        });
-                        
-                        await Promise.all(deletePromises);
-                    }
+                    console.log('🗑️ Clearing all calculation history - LocalStorage only');
                     
-                    // מחיקה מקומית
+                    // מחיקה מקומית בלבד - ללא Firebase
                     const index = JSON.parse(localStorage.getItem(STORAGE_INDEX_KEY) || '[]');
                     index.forEach(item => localStorage.removeItem(item.key));
                     localStorage.removeItem(STORAGE_INDEX_KEY);
                     
+                    console.log('✅ All calculation history cleared successfully');
                     window.location.reload();
                 } catch (error) {
-                    console.error('שגיאה במחיקת נתונים:', error);
-                    alert(`שגיאה במחיקת הנתונים: ${handleFirebaseError(error)}`);
+                    console.error('❌ שגיאה במחיקת נתונים:', error);
+                    alert(`שגיאה במחיקת הנתונים: ${error.message}`);
                 }
             }
         });
@@ -431,8 +400,8 @@
         function resetResultsView() { hideAllViews(); initialMessage.classList.remove('hidden'); }
         function hideAllViews() { initialMessage.classList.add('hidden'); loader.classList.add('hidden'); errorMessage.classList.add('hidden'); resultsTableContainer.classList.add('hidden'); }
 
-        // --- Persistence Functions (Firebase with localStorage backup) ---
-        async function saveStateToLocalStorage() {
+        // --- Persistence Functions (localStorage only) ---
+        function saveStateToLocalStorage() {
             if (!processedData || processedData.length === 0) return;
             
             const { year, month } = calculationParams;
@@ -441,7 +410,7 @@
             const state = {
                 id: calculationId,
                 processedData, 
-                rawStudentData: Object.fromEntries(rawStudentData), // Convert Map to Object for Firebase
+                rawStudentData: Object.fromEntries(rawStudentData), // Convert Map to Object for JSON storage
                 calculationParams, 
                 monthlyStipend: monthlyStipendInput.value,
                 timePeriods: getTimePeriodsFromUI().map(p => ({ ...p, startDate: p.startDate.toISOString() })),
@@ -451,32 +420,11 @@
             };
             
             try {
-                // שמירה מקומית לגיבוי
+                console.log('💾 Saving calculation state - LocalStorage only mode');
+                
+                // שמירה מקומית בלבד - ללא Firebase
                 const storageKey = `kollelCalc_${calculationId}`;
                 localStorage.setItem(storageKey, JSON.stringify(state));
-                
-                if (checkOnlineStatus()) {
-                    // שמירה ב-Firebase
-                    await setDoc(doc(calculationsCollection, calculationId), {
-                        ...state,
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                    });
-                    
-                    // שמירת נתוני סטודנטים נפרדת
-                    for (const [studentId, studentData] of rawStudentData.entries()) {
-                        const studentDocId = `${calculationId}_${studentId}`;
-                        await setDoc(doc(studentsCollection, studentDocId), {
-                            calculationId,
-                            studentId,
-                            studentData: {
-                                name: studentData.name,
-                                dailySessions: Object.fromEntries(studentData.dailySessions)
-                            },
-                            timestamp: new Date().toISOString()
-                        });
-                    }
-                }
                 
                 // עדכון אינדקס מקומי
                 let index = JSON.parse(localStorage.getItem(STORAGE_INDEX_KEY) || '[]');
@@ -484,40 +432,24 @@
                 index.unshift({ key: storageKey, year, month, timestamp: state.timestamp, id: calculationId });
                 localStorage.setItem(STORAGE_INDEX_KEY, JSON.stringify(index));
                 
+                console.log('✅ Calculation state saved successfully');
                 populateHistoryDropdown();
                 
             } catch (e) { 
-                console.error("Error saving state:", e); 
-                alert(`שגיאה בשמירת הנתונים: ${handleFirebaseError(e)}`); 
+                console.error("❌ Error saving state:", e); 
+                alert(`שגיאה בשמירת הנתונים: ${e.message}`); 
             }
         }
 
-        async function populateHistoryDropdown() {
+        function populateHistoryDropdown() {
             const historySection = document.getElementById('load-history-section');
             const historySelect = document.getElementById('history-select');
             
             try {
-                let historyItems = [];
+                console.log('📋 Loading calculation history - LocalStorage only mode');
                 
-                if (checkOnlineStatus()) {
-                    // טעינה מ-Firebase
-                    const q = query(calculationsCollection, orderBy('timestamp', 'desc'));
-                    const querySnapshot = await getDocs(q);
-                    
-                    querySnapshot.forEach((doc) => {
-                        const data = doc.data();
-                        historyItems.push({
-                            key: `kollelCalc_${doc.id}`,
-                            id: doc.id,
-                            year: data.year,
-                            month: data.month,
-                            timestamp: data.timestamp
-                        });
-                    });
-                } else {
-                    // טעינה מקומית
-                    historyItems = JSON.parse(localStorage.getItem(STORAGE_INDEX_KEY) || '[]');
-                }
+                // טעינה מקומית בלבד - ללא Firebase
+                const historyItems = JSON.parse(localStorage.getItem(STORAGE_INDEX_KEY) || '[]');
                 
                 if (historyItems.length === 0) { 
                     historySection.classList.add('hidden'); 
