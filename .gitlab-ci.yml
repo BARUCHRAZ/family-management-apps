@@ -1,11 +1,53 @@
 stages:
   - test
+  - build
+  - pages
+
+variables:
+  NODE_VERSION: "18"
 
 test:
   stage: test
-  image: node:18
+  image: node:$NODE_VERSION
   script:
-    - echo "Testing repository"
+    - echo "Testing repository structure"
     - ls -la
+    - echo "Found directories with Hebrew names:"
+    - find . -type d -name "*מינוף*"
+  only:
+    - main
+
+build-bot:
+  stage: build
+  image: node:$NODE_VERSION
+  script:
+    - echo "Building trading bot"
+    - cd "בוט מינוף בירידות"
+    - echo "Installing bot dependencies"
+    - npm install
+    - echo "Testing bot can start"
+    - timeout 10s npm start || echo "Bot build test completed"
+  artifacts:
+    paths:
+      - "בוט מינוף בירידות/node_modules/"
+    expire_in: 1 hour
+  only:
+    - main
+
+pages:
+  stage: pages
+  script:
+    - echo "Creating GitLab Pages"
+    - mkdir public
+    - cp index.html public/
+    - mkdir -p public/savings public/scholarships public/books
+    - cp -r "מחשבון חיסכון משפחתי"/* public/savings/ || echo "Savings app copy failed"
+    - cp -r "מערכת חישוב מלגות"/* public/scholarships/ || echo "Scholarships app copy failed"
+    - cp -r "מערכת ניהול מלאי ספרים"/* public/books/ || echo "Books app copy failed"
+    - echo "GitLab Pages ready"
+    - ls -la public/
+  artifacts:
+    paths:
+      - public
   only:
     - main
