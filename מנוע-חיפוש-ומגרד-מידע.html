@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מגרד מידע מרובה כתובות</title>
+    <script>
+        // ביטול אזהרת Tailwind - חייב להיות לפני טעינת Tailwind
+        (function() {
+            if (window.console && console.warn) {
+                const originalWarn = console.warn;
+                console.warn = function(message) {
+                    if (typeof message === 'string' && 
+                        (message.includes('tailwindcss.com should not be used in production') ||
+                         message.includes('cdn.tailwindcss.com'))) {
+                        return; // מסתיר את האזהרה
+                    }
+                    originalWarn.apply(console, arguments);
+                };
+            }
+        })();
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        details > summary {
+            cursor: pointer;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-500">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-blue-600 dark:text-blue-400">מגרד מידע אמיתי - עובד בנטפרי!</h1>
+            <p class="mt-2 text-lg text-gray-600 dark:text-gray-300">גרוד תוכן אמיתי מאתרים ללא שינויים או סיכומים.</p>
+            
+            <!-- NetFree Alert -->
+            <div class="mt-4 p-4 bg-orange-100 dark:bg-orange-900 border-r-4 border-orange-500 rounded-lg">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <span class="text-2xl">🚨</span>
+                    </div>
+                    <div class="mr-3 text-right">
+                        <h3 class="text-lg font-bold text-orange-800 dark:text-orange-200">⚡ משתמש נטפרי? קרא זה!</h3>
+                        <p class="text-orange-700 dark:text-orange-300 mt-1">
+                            <strong>גירוד אוטומטי לא יעבוד</strong> בגלל מגבלות נטפרי על פרוקסי חיצוני.<br>
+                            <strong class="text-green-600 dark:text-green-400">הפתרון:</strong> השתמש בBookmarklet למטה - עובד על כל אתר! 👇
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-green-50 dark:bg-green-900 rounded-lg">
+                <h3 class="font-bold text-green-800 dark:text-green-200 mb-2">🎯 הפתרון המושלם לנטפרי:</h3>
+                <p class="text-green-700 dark:text-green-300 mb-3">
+                    <strong>Bookmarklet לגירוד</strong> - גרוד כל אתר שאתה מבקר בו! עובד מהדפדפן עצמו ללא פרוקסי.
+                </p>
+                <button id="generateBookmarklet" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">
+                    🔧 צור Bookmarklet לגירוד
+                </button>
+            </div>
+            
+            <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded-lg text-sm">
+                <p class="text-blue-800 dark:text-blue-200">
+                    💡 <strong>או:</strong> הדבק קישורים למטה לגירוד אוטומטי (מוגבל בנטפרי).
+                </p>
+            </div>
+
+            <!-- Bookmarklet Instructions -->
+            <div id="bookmarkletInstructions" class="hidden mt-4 p-4 bg-green-50 dark:bg-green-900 rounded-lg border border-green-200 dark:border-green-700">
+                <h3 class="text-lg font-bold text-green-800 dark:text-green-200 mb-3">📖 הוראות שימוש ב-Bookmarklet</h3>
+                
+                <div class="space-y-3 text-sm text-green-700 dark:text-green-300">
+                    <div>
+                        <strong>שלב 1:</strong> גרור את הקישור הירוק למטה לסרגל הסימניות בדפדפן שלך
+                        <a id="bookmarkletLink" href="#" class="hidden block mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded text-center font-bold" style="text-decoration: none;">
+                            🔧 גרד תוכן מהעמוד
+                        </a>
+                    </div>
+                    
+                    <div class="border-t border-green-200 dark:border-green-600 pt-3">
+                        <strong>שלב 2:</strong> היכנס לכל אתר שאתה רוצה לגרד (גם באתרים חסומים בנטפרי)
+                    </div>
+                    
+                    <div>
+                        <strong>שלב 3:</strong> לחץ על הסימנייה שיצרת
+                    </div>
+                    
+                    <div>
+                        <strong>תוצאה:</strong> יפתח חלון חדש עם כל התוכן של העמוד בפורמט נקי וניתן להעתקה
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-3 bg-yellow-100 dark:bg-yellow-800 rounded-lg">
+                    <p class="text-yellow-800 dark:text-yellow-200 text-sm">
+                        ⚡ <strong>יתרונות:</strong> עובד בכל אתר, לא צריך פרוקסי, תוכן אמיתי ללא שינויים, עובד בנטפרי!
+                    </p>
+                </div>
+            </div>
+        </header>
+
+        <!-- URLs Input -->
+        <div class="flex flex-col gap-4 mb-8">
+            <label for="urlsInput" class="font-semibold text-lg">רשימת כתובות לארגון:</label>
+            <textarea id="urlsInput" rows="10" placeholder="https://he.wikipedia.org/wiki/אופציה_(פיננסים)&#10;https://www.ynet.co.il/home/0,7340,L-8,00.html&#10;https://www.hamichlol.org.il/אופציה" class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"></textarea>
+            <div class="flex gap-2 self-center">
+                <button id="scrapeButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg">
+                    🚀 גרד תוכן
+                </button>
+                <button id="stopButton" class="hidden bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg">
+                    ⏹️ עצור
+                </button>
+                <button id="organizeButton" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg">
+                    ארגן קישורים
+                </button>
+                <button id="openAllButton" class="hidden bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-lg">
+                    פתח את כל הקישורים
+                </button>
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div id="actionButtons" class="hidden text-center mb-4">
+             <button id="downloadAllButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                הורד את כל התוכן
+            </button>
+        </div>
+
+        <!-- Progress and Results -->
+        <div id="progressContainer" class="text-center my-4 hidden">
+             <p id="progressText" class="text-lg"></p>
+        </div>
+        <div id="resultsContainer" class="space-y-4"></div>
+    
+    </div>
+    
+    <!-- Notification Area -->
+    <div id="notification" class="hidden fixed top-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 opacity-0"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlsInput = document.getElementById('urlsInput');
+            const scrapeButton = document.getElementById('scrapeButton');
+            const stopButton = document.getElementById('stopButton');
+            const resultsContainer = document.getElementById('resultsContainer');
+            const notification = document.getElementById('notification');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressText = document.getElementById('progressText');
+            const actionButtons = document.getElementById('actionButtons');
+            const downloadAllButton = document.getElementById('downloadAllButton');
+
+            let allScrapedContent = '';
+            let isScraping = false;
+
+        // Bookmarklet generation function
+        function generateBookmarklet() {
+            const bookmarkletCode = `
+                javascript:(function(){
+                    try {
+                        const selection = window.getSelection().toString();
+                        const textContent = selection || document.body.innerText || document.body.textContent || '';
+                        const title = document.title || 'ללא כותרת';
+                        const url = window.location.href;
+                        
+                        if (!textContent.trim()) {
+                            alert('לא נמצא תוכן לגירוד בעמוד זה');
+                            return;
+                        }
+                        
+                        const result = {
+                            title: title,
+                            url: url,
+                            content: textContent.substring(0, 10000),
+                            timestamp: new Date().toLocaleString('he-IL')
+                        };
+                        
+                        const newWindow = window.open('', '_blank', 'width=900,height=700,scrollbars=yes');
+                        newWindow.document.write(\`
+                            <html dir="rtl">
+                            <head>
+                                <title>תוכן שנגרד - \${title}</title>
+                                <meta charset="UTF-8">
+                                <style>
+                                    body { 
+                                        font-family: Arial, sans-serif; 
+                                        margin: 20px; 
+                                        background-color: #f8fafc; 
+                                        line-height: 1.6;
+                                    }
+                                    .container { 
+                                        background: white; 
+                                        padding: 30px; 
+                                        border-radius: 12px; 
+                                        box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+                                        max-width: 800px;
+                                        margin: 0 auto;
+                                    }
+                                    .header { 
+                                        border-bottom: 3px solid #10b981; 
+                                        padding-bottom: 15px; 
+                                        margin-bottom: 25px; 
+                                    }
+                                    .title { 
+                                        color: #065f46; 
+                                        font-size: 28px; 
+                                        margin-bottom: 10px; 
+                                        font-weight: bold;
+                                    }
+                                    .url { 
+                                        color: #6b7280; 
+                                        font-size: 14px; 
+                                        word-break: break-all; 
+                                        background: #f3f4f6;
+                                        padding: 8px;
+                                        border-radius: 6px;
+                                        margin-bottom: 8px;
+                                    }
+                                    .timestamp {
+                                        color: #9ca3af;
+                                        font-size: 12px;
+                                    }
+                                    .content { 
+                                        line-height: 1.8; 
+                                        white-space: pre-wrap; 
+                                        font-size: 16px;
+                                        color: #374151;
+                                        margin: 20px 0;
+                                    }
+                                    .buttons {
+                                        display: flex;
+                                        gap: 10px;
+                                        margin-top: 25px;
+                                        flex-wrap: wrap;
+                                    }
+                                    .btn { 
+                                        border: none; 
+                                        padding: 12px 24px; 
+                                        border-radius: 8px; 
+                                        cursor: pointer; 
+                                        font-weight: bold;
+                                        transition: all 0.3s;
+                                        font-size: 14px;
+                                    }
+                                    .copy-btn { 
+                                        background: #10b981; 
+                                        color: white; 
+                                    }
+                                    .copy-btn:hover { 
+                                        background: #059669; 
+                                        transform: translateY(-1px);
+                                    }
+                                    .download-btn {
+                                        background: #3b82f6;
+                                        color: white;
+                                    }
+                                    .download-btn:hover {
+                                        background: #2563eb;
+                                        transform: translateY(-1px);
+                                    }
+                                    .stats {
+                                        background: #f0fdf4;
+                                        padding: 15px;
+                                        border-radius: 8px;
+                                        margin: 20px 0;
+                                        border-right: 4px solid #10b981;
+                                    }
+                                    .success { 
+                                        color: #059669; 
+                                        font-weight: bold; 
+                                        display: none; 
+                                        margin-top: 10px;
+                                    }
+                                </style>
+                            </head>
+                            <body>
+                                <div class="container">
+                                    <div class="header">
+                                        <div class="title">✅ גירוד הושלם בהצלחה!</div>
+                                        <div class="title" style="font-size: 20px; color: #374151;">\${title}</div>
+                                        <div class="url">\${url}</div>
+                                        <div class="timestamp">נגרד ב: \${result.timestamp}</div>
+                                    </div>
+                                    
+                                    <div class="stats">
+                                        <strong>📊 סטטיסטיקות:</strong><br>
+                                        אורך התוכן: \${textContent.length.toLocaleString()} תווים<br>
+                                        מילים (משוער): \${Math.round(textContent.split(/\\s+/).length).toLocaleString()}
+                                    </div>
+                                    
+                                    <div class="content">\${textContent}</div>
+                                    
+                                    <div class="buttons">
+                                        <button class="btn copy-btn" onclick="copyContent()">📋 העתק תוכן</button>
+                                        <button class="btn download-btn" onclick="downloadContent()">💾 הורד כקובץ</button>
+                                    </div>
+                                    <div class="success" id="success">✅ הועתק בהצלחה!</div>
+                                </div>
+                                
+                                <script>
+                                    function copyContent() {
+                                        const content = document.querySelector('.content').textContent;
+                                        navigator.clipboard.writeText(content).then(() => {
+                                            document.getElementById('success').style.display = 'block';
+                                            setTimeout(() => {
+                                                document.getElementById('success').style.display = 'none';
+                                            }, 3000);
+                                        }).catch(err => {
+                                            alert('שגיאה בהעתקה: ' + err);
+                                        });
+                                    }
+                                    
+                                    function downloadContent() {
+                                        const content = document.querySelector('.content').textContent;
+                                        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = 'scraped-content-' + new Date().getTime() + '.txt';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                        URL.revokeObjectURL(url);
+                                    }
+                                <\/script>
+                            </body>
+                            </html>
+                        \`);
+                        
+                        // Show success message on original page
+                        const successDiv = document.createElement('div');
+                        successDiv.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px 20px; border-radius: 8px; z-index: 9999; font-family: Arial; box-shadow: 0 4px 20px rgba(0,0,0,0.3);';
+                        successDiv.innerHTML = '✅ גירוד הושלם! חלון חדש נפתח עם התוכן';
+                        document.body.appendChild(successDiv);
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(successDiv);
+                        }, 4000);
+                        
+                    } catch (error) {
+                        alert('שגיאה בגירוד: ' + error.message);
+                    }
+                })();
+            `;
+            return bookmarkletCode.replace(/\s+/g, ' ').trim();
+        }
+
+        function createBookmarkletLink() {
+            const bookmarkletCode = generateBookmarklet();
+            const bookmarkletLink = document.getElementById('bookmarkletLink');
+            const instructionsDiv = document.getElementById('bookmarkletInstructions');
+            
+            bookmarkletLink.href = bookmarkletCode;
+            bookmarkletLink.style.display = 'block';
+            instructionsDiv.classList.remove('hidden');
+            
+            showNotification('Bookmarklet נוצר בהצלחה! עקוב אחר ההוראות למטה');
+            
+            // Scroll to instructions
+            instructionsDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showNotification(message, isError = false) {
+            notification.textContent = message;
+            notification.className = `fixed top-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg z-50 transition-opacity duration-300 ${isError ? 'bg-red-500' : 'bg-green-500'}`;
+            notification.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => {
+                notification.classList.add('opacity-0');
+                setTimeout(() => notification.classList.add('hidden'), 300);
+            }, 3000);
+        }
+
+        async function scrapeContent(url) {
+            // ננסה שיטות שונות לגירוד ללא פרוקסי
+            const methods = [
+                { name: 'iframe Scraping', func: () => scrapeWithIframe(url) },
+                { name: 'Direct Fetch (JSONP)', func: () => scrapeWithJSONP(url) },
+                { name: 'Puppeteer Alternative', func: () => scrapeWithAlternative(url) }
+            ];
+
+            for (let method of methods) {
+                try {
+                    console.log(`מנסה ${method.name} עבור ${url}`);
+                    const result = await method.func();
+                    if (result.status === 'success') {
+                        console.log(`הצליח עם ${method.name}`);
+                        return result;
+                    }
+                } catch (error) {
+                    console.log(`${method.name} נכשל: ${error.message}`);
+                }
+            }
+
+            return { 
+                status: 'error', 
+                url, 
+                reason: `❌ גירוד אוטומטי נכשל (מוגבל בנטפרי). 
+                📖 השתמש בBookmarklet למעלה לגירוד ידני של כל קישור.
+                🔧 צור Bookmarklet → גרור לסרגל סימניות → לחץ בכל אתר.` 
+            };
+        }
+
+        // שיטה 1: גירוד עם iframe (עוקף CORS לפעמים)
+        async function scrapeWithIframe(url) {
+            return new Promise((resolve) => {
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = url;
+                
+                let timeout = setTimeout(() => {
+                    document.body.removeChild(iframe);
+                    resolve({ status: 'error', url, reason: 'Timeout - האתר לא נטען' });
+                }, 10000);
+
+                iframe.onload = function() {
+                    try {
+                        clearTimeout(timeout);
+                        const content = iframe.contentDocument || iframe.contentWindow.document;
+                        
+                        if (!content) {
+                            throw new Error('לא ניתן לגשת לתוכן iframe');
+                        }
+
+                        // הסרת אלמנטים מיותרים
+                        const elementsToRemove = content.querySelectorAll('script, style, nav, header, footer, aside');
+                        elementsToRemove.forEach(el => el.remove());
+                        
+                        let textContent = content.body ? content.body.textContent : '';
+                        textContent = textContent.replace(/\s+/g, ' ').trim();
+                        
+                        if (textContent.length < 100) {
+                            throw new Error('תוכן קצר מדי');
+                        }
+
+                        document.body.removeChild(iframe);
+                        resolve({ status: 'success', url, content: textContent });
+                        
+                    } catch (error) {
+                        document.body.removeChild(iframe);
+                        resolve({ status: 'error', url, reason: `iframe נכשל: ${error.message}` });
+                    }
+                };
+
+                iframe.onerror = function() {
+                    clearTimeout(timeout);
+                    document.body.removeChild(iframe);
+                    resolve({ status: 'error', url, reason: 'שגיאה בטעינת iframe' });
+                };
+
+                document.body.appendChild(iframe);
+            });
+        }
+
+        // שיטה 2: ניסיון עם JSONP (לאתרים שתומכים)
+        async function scrapeWithJSONP(url) {
+            try {
+                // ננסה גישה ישירה עם headers שונים
+                const response = await fetch(url, {
+                    method: 'GET',
+                    mode: 'no-cors', // עוקף CORS
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                // עם no-cors לא נוכל לקרוא את התוכן, אז זה לא יעבוד
+                throw new Error('no-cors לא מאפשר קריאת תוכן');
+                
+            } catch (error) {
+                throw new Error(`JSONP נכשל: ${error.message}`);
+            }
+        }
+
+        // שיטה 3: שימוש בספריות חיצוניות
+        async function scrapeWithAlternative(url) {
+            try {
+                // ננסה עם Web Workers או Service Workers
+                const worker = new Worker('data:application/javascript,self.postMessage("test")');
+                worker.terminate();
+                
+                throw new Error('שיטה זו טרם מוכנה');
+                
+            } catch (error) {
+                throw new Error(`Alternative נכשל: ${error.message}`);
+            }
+        }
+
+        // עיבוד תוכן שנגרד
+        async function processScrapedContent(htmlText, url) {
+            try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlText, 'text/html');
+                
+                // הסרת אלמנטים מיותרים
+                const elementsToRemove = [
+                    'script', 'style', 'noscript', 'iframe', 'embed', 'object',
+                    'nav', 'header', 'footer', 'aside', 'menu',
+                    '.ads', '.advertisement', '.banner', '.popup', '.modal',
+                    '.social-share', '.comments', '.sidebar', '.navigation',
+                    '[class*="ad-"]', '[id*="ad-"]', '[class*="social"]'
+                ];
+                
+                elementsToRemove.forEach(selector => {
+                    doc.querySelectorAll(selector).forEach(el => el.remove());
+                });
+                
+                // חיפוש תוכן מרכזי
+                let content = '';
+                const contentSelectors = [
+                    'main', 'article', '.content', '#content', '.post', '.entry',
+                    '.mw-parser-output', '.article-body', '.post-content',
+                    '.entry-content', '[role="main"]', '.main-content'
+                ];
+                
+                for (const selector of contentSelectors) {
+                    const element = doc.querySelector(selector);
+                    if (element) {
+                        // הסרת אלמנטים מיותרים גם מתוך האלמנט המרכזי
+                        element.querySelectorAll('script, style, .ads, .advertisement').forEach(el => el.remove());
+                        content = element.textContent || "";
+                        if (content.trim().length > 200) {
+                            break;
+                        }
+                    }
+                }
+                
+                // גיבוי - לקיחת כל הבודי
+                if (!content.trim() || content.length < 200) {
+                    content = doc.body?.textContent || "";
+                }
+                
+                if (!content.trim() || content.length < 50) {
+                    return { status: 'error', url, reason: 'לא נמצא תוכן טקסטואלי מספיק' };
+                }
+                
+                // ניקוי הטקסט
+                const cleanContent = content
+                    .replace(/\s+/g, ' ')  // מחליף רווחים מרובים ברווח יחיד
+                    .replace(/\n\s*\n/g, '\n')  // מחליף שורות ריקות מרובות בשורה יחידה
+                    .replace(/[\t\r]/g, ' ')  // מחליף טאבים ו-carriage returns ברווחים
+                    .trim()
+                    .substring(0, 20000); // הגבלה ל-20K תווים
+                
+                if (cleanContent.length < 100) {
+                    return { status: 'error', url, reason: 'התוכן קצר מדי אחרי ניקוי' };
+                }
+                
+                return { status: 'success', url, content: cleanContent };
+                
+            } catch (error) {
+                return { status: 'error', url, reason: `שגיאה בעיבוד התוכן: ${error.message}` };
+            }
+        }
+
+        scrapeButton.addEventListener('click', async () => {
+            const urls = urlsInput.value.trim().split('\n').map(u => u.trim()).filter(u => u);
+            if (urls.length === 0) {
+                showNotification('נא להזין לפחות כתובת אחת.', true);
+                return;
+            }
+
+            // Show NetFree warning
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'bg-yellow-100 dark:bg-yellow-800 border border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded mb-4';
+            warningDiv.innerHTML = `
+                <div class="flex">
+                    <div class="flex-shrink-0">⚠️</div>
+                    <div class="mr-3">
+                        <strong>אזהרה:</strong> גירוד אוטומטי מוגבל בנטפרי וצפוי להיכשל.<br>
+                        <strong>מומלץ:</strong> השתמש ב-Bookmarklet למעלה לגירוד ידני יעיל!
+                    </div>
+                </div>
+            `;
+            resultsContainer.appendChild(warningDiv);
+
+            isScraping = true;
+            scrapeButton.classList.add('hidden');
+            stopButton.classList.remove('hidden');
+            allScrapedContent = '';
+            actionButtons.classList.add('hidden');
+            progressContainer.classList.remove('hidden');
+
+            for (let i = 0; i < urls.length && isScraping; i++) {
+                const url = urls[i];
+                progressText.textContent = `מגרד כתובת ${i + 1} מתוך ${urls.length}: ${url}`;
+                showNotification(`מגרד כתובת ${i + 1}/${urls.length}...`, false);
+                
+                const result = await scrapeContent(url);
+                renderResult(result);
+                
+                // הפסקה קצרה בין בקשות כדי לא להעמיס על השרתים
+                if (i < urls.length - 1 && isScraping) {
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+
+            const successCount = document.querySelectorAll('.border-green-500').length;
+            const totalCount = urls.length;
+            
+            if (isScraping) {
+                progressText.textContent = `הגירוד הושלם! נגרדו ${successCount} דפים בהצלחה מתוך ${totalCount}.`;
+                showNotification(`הושלם! ${successCount}/${totalCount} דפים נגרדו בהצלחה`, false);
+            } else {
+                progressText.textContent = `הגירוד נעצר! נגרדו ${successCount} דפים עד כה.`;
+                showNotification('הגירוד נעצר על ידי המשתמש', true);
+            }
+            
+            isScraping = false;
+            scrapeButton.classList.remove('hidden');
+            stopButton.classList.add('hidden');
+            
+            if (allScrapedContent) {
+                 actionButtons.classList.remove('hidden');
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            isScraping = false;
+            showNotification('עוצר גירוד...', false);
+        });
+        
+        function renderResult(result) {
+            const resultElement = document.createElement('div');
+            resultElement.className = 'bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md border-l-4';
+
+            if (result.status === 'success') {
+                resultElement.classList.add('border-green-500');
+                resultElement.innerHTML = `
+                    <details>
+                        <summary class="font-semibold text-green-600 dark:text-green-400">${result.url}</summary>
+                        <div class="mt-2 p-3 bg-gray-100 dark:bg-gray-700 rounded">
+                            <pre class="text-sm">${result.content}</pre>
+                        </div>
+                    </details>
+                `;
+                allScrapedContent += `--- התוכן מתוך: ${result.url} ---\n\n${result.content}\n\n--- סוף תוכן ---\n\n\n`;
+            } else {
+                resultElement.classList.add('border-red-500');
+                resultElement.innerHTML = `
+                    <p class="font-semibold text-red-600 dark:text-red-400">${result.url}</p>
+                    <p class="text-sm mt-1">${result.reason}</p>
+                `;
+            }
+            resultsContainer.appendChild(resultElement);
+        }
+
+        downloadAllButton.addEventListener('click', () => {
+            if (!allScrapedContent) {
+                showNotification('אין תוכן להורדה.', true);
+                return;
+            };
+
+            const blob = new Blob([allScrapedContent], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'all-scraped-content.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+            // Add event listener for bookmarklet generation
+            const generateBookmarkletButton = document.getElementById('generateBookmarklet');
+            if (generateBookmarkletButton) {
+                generateBookmarkletButton.addEventListener('click', createBookmarkletLink);
+            }
+
+            // Add event listeners for organize and open all buttons
+            const organizeButton = document.getElementById('organizeButton');
+            const openAllButton = document.getElementById('openAllButton');
+
+            if (organizeButton) {
+                organizeButton.addEventListener('click', () => {
+                    const urls = urlsInput.value.trim().split('\n').map(u => u.trim()).filter(u => u);
+                    if (urls.length === 0) {
+                        showNotification('נא להזין לפחות כתובת אחת.', true);
+                        return;
+                    }
+
+                    // Show organize results
+                    resultsContainer.innerHTML = `
+                        <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-lg">
+                            <h3 class="text-lg font-bold text-blue-800 dark:text-blue-200 mb-3">
+                                📋 נמצאו ${urls.length} קישורים:
+                            </h3>
+                            <div class="space-y-2">
+                                ${urls.map((url, index) => `
+                                    <div class="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded border">
+                                        <span class="text-sm">${index + 1}. ${url}</span>
+                                        <a href="${url}" target="_blank" class="text-blue-600 hover:text-blue-800 dark:text-blue-400">↗</a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    openAllButton.classList.remove('hidden');
+                    showNotification(`${urls.length} קישורים אורגנו בהצלחה!`);
+                });
+            }
+
+            if (openAllButton) {
+                openAllButton.addEventListener('click', () => {
+                    const urls = urlsInput.value.trim().split('\n').map(u => u.trim()).filter(u => u);
+                    urls.forEach((url, index) => {
+                        setTimeout(() => {
+                            window.open(url, '_blank');
+                        }, index * 500); // Delay between opens
+                    });
+                    showNotification(`פותחים ${urls.length} קישורים...`);
+                });
+            }
+
+        }); // End of DOMContentLoaded
+
+    </script>
+</body>
+</html>
